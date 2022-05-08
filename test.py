@@ -2,13 +2,24 @@
 import numpy as np
 # X = input of our 3 input XOR gate
 # set up the inputs of the neural network (right from the table)
+#     X1   X2   X3   Y
+#      0    0    0   1
+#      0    0    1   0
+#      0    1    0   0
+#      0    1    1   0
+#      1    0    0   0
+#      1    0    1   0
+#      1    1    0   0
+#      1    1    1   1
+
 X = np.array(([0,0,0],[0,0,1],[0,1,0], \
 [0,1,1],[1,0,0],[1,0,1],[1,1,0],[1,1,1]), dtype=float)
 # y = our output of our neural network
 y = np.array(([1], [0], [0], [0], [0], \
 [0], [0], [1]), dtype=float)
+
 # what value we want to predict
-xPredicted = np.array(([0,0,1]), dtype=float)
+xPredicted = np.array(([1,1,1]), dtype=float)
 X = X/np.amax(X, axis=0) # maximum of X input array
 # maximum of xPredicted (our input data for the prediction)
 xPredicted = xPredicted/np.amax(xPredicted, axis=0)
@@ -81,7 +92,7 @@ class Neural_Network (object):
 		print ("Expected (X1-X3): \n" + str(xPredicted))
 		print ("Output (Y1): \n" + str(self.feedForward(xPredicted)))
 myNeuralNetwork = Neural_Network()
-trainingEpochs = 1
+trainingEpochs = 1000
 #trainingEpochs = 100000
 for i in range(trainingEpochs): # train myNeuralNetwork 1,000 times
 	print ("Epoch # " + str(i) + "\n")
