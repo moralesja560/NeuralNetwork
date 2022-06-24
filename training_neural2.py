@@ -36,7 +36,7 @@ model.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-model.fit(tf.expand_dims(X, axis=-1),y, epochs=400)
+model.fit(tf.expand_dims(X, axis=-1),y, epochs=800)
 
 
 model.save(resource_path(r"savedmodel2"))
