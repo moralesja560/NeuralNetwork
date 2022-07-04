@@ -1,5 +1,6 @@
 from math import sin
 import os
+from tabnanny import verbose
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 import numpy as np
@@ -53,20 +54,20 @@ Tf_test_y = Tf_raw_y[80:]
 
 
 #step 3: visualize the data 
-plt.figure(figsize =(20,7))
+#plt.figure(figsize =(20,7))
 #plot training data in blue
-plt.scatter(Tf_train_X,Tf_train_y, c="b", label="Training Data", marker='.')
-plt.plot(Tf_train_X,Tf_train_y)
-plt.scatter(Tf_test_X,Tf_test_y, c="g", label="Testing Data",marker='.')
-plt.plot(Tf_test_X,Tf_test_y)
-plt.legend()
+#plt.scatter(Tf_train_X,Tf_train_y, c="b", label="Training Data", marker='.')
+#plt.plot(Tf_train_X,Tf_train_y)
+#plt.scatter(Tf_test_X,Tf_test_y, c="g", label="Testing Data",marker='.')
+#plt.plot(Tf_test_X,Tf_test_y)
+#plt.legend()
 #plt.show()
 
 #step 4: visualize the data 
 model = tf.keras.Sequential()
 
 model.add(tf.keras.layers.Dense(50, activation =None))
-model.add(tf.keras.layers.Dense(50, activation ="relu"))
+model.add(tf.keras.layers.Dense(50, activation =None))
 model.add(tf.keras.layers.Dense(1))
 
 # Step 2 .- Compile the model
@@ -76,7 +77,7 @@ model.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-model.fit(tf.expand_dims(Tf_train_X, axis=-1),Tf_train_y, epochs=400)
+model.fit(tf.expand_dims(Tf_train_X, axis=-1),Tf_train_y, epochs=400,verbose=0)
 
 #train area
 input_value = 10003
@@ -88,6 +89,17 @@ print(f"valor entrada: {input_value}, \n valor salida correcto {correct_value} \
 
 
 #Step5 Predict data
-#y_pred = model.predict(Tf_test_X)
+y_pred = model.predict(Tf_test_X)
 
-#print(y_pred)
+
+#step 6: visualize the data 
+plt.figure(figsize =(10,7))
+#plot training data in blue
+plt.scatter(Tf_train_X,Tf_train_y, c="b", label="Training Data", marker='.')
+plt.plot(Tf_train_X,Tf_train_y)
+plt.scatter(Tf_test_X,Tf_test_y, c="g", label="Testing Data",marker='.')
+plt.plot(Tf_test_X,Tf_test_y)
+plt.scatter(Tf_test_X,y_pred, c="r", label="Neural Response",marker='.')
+plt.plot(Tf_test_X,Tf_test_y)
+plt.legend()
+plt.show()
