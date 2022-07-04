@@ -90,7 +90,7 @@ model2.add(tf.keras.layers.Dense(1))
 #we can add as much layers as we want
 model2.compile(loss = tf.keras.losses.mse,
               optimizer = tf.keras.optimizers.Adam(learning_rate= 0.01),
-              metrics = ["mae"]
+              metrics = ["mse"]
               )
 #fit the model
 model2.fit(tf.expand_dims(Tf_train_X, axis=-1),Tf_train_y, epochs=400,verbose=0)
@@ -123,7 +123,7 @@ plt.scatter(Tf_train_X,Tf_train_y, c="b", label="Training Data", marker='.')
 plt.plot(Tf_train_X,Tf_train_y)
 plt.scatter(Tf_test_X,Tf_test_y, c="g", label="Testing Data",marker='.')
 plt.plot(Tf_test_X,Tf_test_y)
-plt.scatter(Tf_test_X,y_pred, c="r", label="Neural Response MAE",marker='.')
+plt.scatter(Tf_test_X,y_pred, c="red", label="Neural Response MAE",marker='.')
 plt.plot(Tf_test_X,y_pred)
 plt.scatter(Tf_test_X,y_pred2, c="black", label="Neural Response MSE",marker='.')
 plt.plot(Tf_test_X,y_pred2)

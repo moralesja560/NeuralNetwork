@@ -72,9 +72,9 @@ model.add(tf.keras.layers.Dense(1))
 
 # Step 2 .- Compile the model
 #we can add as much layers as we want
-model.compile(loss = tf.keras.losses.mae,
+model.compile(loss = tf.keras.losses.mse,
               optimizer = tf.keras.optimizers.Adam(learning_rate= 0.01),
-              metrics = ["mae"]
+              metrics = ["mse"]
               )
 #fit the model
 model.fit(tf.expand_dims(Tf_train_X, axis=-1),Tf_train_y, epochs=400,verbose=0)
