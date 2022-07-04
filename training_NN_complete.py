@@ -103,3 +103,5 @@ plt.scatter(Tf_test_X,y_pred, c="r", label="Neural Response",marker='.')
 plt.plot(Tf_test_X,Tf_test_y)
 plt.legend()
 plt.show()
+
+model.save(resource_path(r"saved_complete"))
