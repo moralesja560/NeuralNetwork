@@ -1,4 +1,5 @@
 import os
+from unittest import result
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 import pandas as pd
@@ -13,6 +14,12 @@ def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
+
+def listFrom1toN(n):
+    list_from_1_to_n = []
+    for x in range(1,n+1):
+        list_from_1_to_n.append(x)
+    return list_from_1_to_n
 
 
 def plot_call(X_train,y_train,X_test,y_test,y_pred):
@@ -55,9 +62,12 @@ y = insurance_one_hot["charges"]
 X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
 
 
+
+
 tf.random.set_seed(42)
 insurance_model = tf.keras.Sequential()
 
+insurance_model.add(tf.keras.layers.Dense(10))
 insurance_model.add(tf.keras.layers.Dense(10))
 insurance_model.add(tf.keras.layers.Dense(1))
 
@@ -68,21 +78,22 @@ insurance_model.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history1 = insurance_model.fit(X_train,y_train, epochs=100,verbose=0)
+history1 = insurance_model.fit(X_train,y_train, epochs=1000,verbose=0)
 
 
 
 #test data set
 print(insurance_model.evaluate(X_test,y_test))
 
+############################################################
 
 # Set random seed
 tf.random.set_seed(42)
 
 # Add an extra layer and increase number of units
 insurance_model_2 = tf.keras.Sequential([
-  tf.keras.layers.Dense(100), # 100 units
-  tf.keras.layers.Dense(10), # 10 units
+  tf.keras.layers.Dense(200), # 100 units
+  tf.keras.layers.Dense(100), # 10 units
   tf.keras.layers.Dense(1) # 1 unit (important for output layer)
 ])
 
@@ -92,12 +103,13 @@ insurance_model_2.compile(loss=tf.keras.losses.mae,
                           metrics=['mae'])
 
 # Fit the model and save the history (we can plot this)
-history2 = insurance_model_2.fit(X_train, y_train, epochs=100, verbose=0)
+history2 = insurance_model_2.fit(X_train, y_train, epochs=200, verbose=0)
 
 
 #test data set
 print(insurance_model_2.evaluate(X_test,y_test))
 
+############################################################
 
 tf.random.set_seed(42)
 insurance_model_3 = tf.keras.Sequential()
@@ -113,18 +125,22 @@ insurance_model_3.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history3 = insurance_model_3.fit(X_train,y_train, epochs=200,verbose=0)
+history3 = insurance_model_3.fit(X_train,y_train, epochs=1000,verbose=0)
 
 
 
 #test data set
 print(insurance_model_3.evaluate(X_test,y_test))
 
+############################################################
 
+tf.random.set_seed(42)
 insurance_model4 = tf.keras.Sequential()
 
-insurance_model4.add(tf.keras.layers.Dense(100, activation = "relu"))
-insurance_model4.add(tf.keras.layers.Dense(100, activation = "relu"))
+insurance_model4.add(tf.keras.layers.Dense(150, activation ="relu"))
+insurance_model4.add(tf.keras.layers.Dense(150, activation ="relu"))
+insurance_model4.add(tf.keras.layers.Dense(150, activation ="relu"))
+insurance_model4.add(tf.keras.layers.Dense(125, activation ="relu"))
 insurance_model4.add(tf.keras.layers.Dense(1))
 
 # Step 2 .- Compile the model
@@ -134,11 +150,8 @@ insurance_model4.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history4 = insurance_model4.fit(X_train,y_train, epochs=400,verbose=0)
-
-#test data set
+history4 = insurance_model4.fit(X_train,y_train, epochs=1000,verbose=0)
 print(insurance_model4.evaluate(X_test,y_test))
-
 
 #step 6: visualize the data 
 plt.figure(figsize =(10,7))
@@ -153,9 +166,9 @@ plt.scatter(history4.epoch,history4.history["loss"], c="yellow", label="Model 4"
 plt.plot(history4.epoch,history4.history["loss"])
 
 plt.legend()
-plt.show()
+#plt.show()
 
-
+X_plot = listFrom1toN(len(X_test))
 y_pred_1 = insurance_model.predict(X_test)
 y_pred_2 = insurance_model_2.predict(X_test)
 y_pred_3 = insurance_model_3.predict(X_test)
@@ -163,4 +176,16 @@ y_pred_4 = insurance_model4.predict(X_test)
 
 results = pd.DataFrame(list(zip(y_test,y_pred_1,y_pred_2,y_pred_3,y_pred_4)),columns=["Valor Real","Modelo 1","Modelo 2","Modelo 3","Modelo 4"])
 
-print(results.to_string())
+results=results.astype(float)
+
+results.sort_values(by=['Valor Real'], inplace=True)
+
+results['X_plot'] = X_plot
+
+results.plot(x='X_plot',y=["Valor Real","Modelo 1","Modelo 2","Modelo 3","Modelo 4"],kind='line')
+#results.plot(x='X_plot',y="Valor Real",kind='line',color="gray")
+#results.plot(x='X_plot',y="Modelo 1",kind='line',color="blue")
+#results.plot(x='X_plot',y="Modelo 2",kind='line',color="red")
+#results.plot(x='X_plot',y="Modelo 3",kind='line',color="green")
+#results.plot(x='X_plot',y="Modelo 4",kind='line',color="yellow")
+plt.show()
