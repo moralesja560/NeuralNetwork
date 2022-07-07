@@ -7,13 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
 import sys
-
-
-#This function sets the absolute path for the app to access its resources
-def resource_path(relative_path):
-    """ Get absolute path to resource, works for dev and for PyInstaller """
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
-    return os.path.join(base_path, relative_path)
+from sklearn.compose import make_column_transformer
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
 
 def listFrom1toN(n):
     list_from_1_to_n = []
@@ -21,48 +16,45 @@ def listFrom1toN(n):
         list_from_1_to_n.append(x)
     return list_from_1_to_n
 
+################### CHAPTER 64 - NORMALIZATION AND STANDARDIZATION #############################
 
-def plot_call(X_train,y_train,X_test,y_test,y_pred):
-	#step 6: visualize the data 
-	plt.figure(figsize =(10,7))
-	#plot training data in blue
-	plt.scatter(X_train,y_train, c="b", label="Training Data", marker='.')
-	plt.plot(X_train,y_train)
-	plt.scatter(X_test,y_test, c="g", label="Testing Data",marker='.')
-	plt.plot(X_test,y_test)
-	plt.scatter(X_test,y_pred, c="r", label="Neural Response",marker='.')
-	plt.plot(X_test,y_pred)
-	plt.legend()
-	plt.show()
 
 
 #step 1: load data from CSV
 insurance_data = pd.read_csv("https://raw.githubusercontent.com/stedy/Machine-Learning-with-R-datasets/master/insurance.csv")
 
-#refer to a column by using insurance_data.loc[:"age"] or  insurance_data.iloc[:,4]
-#refer to independent variable as the features and depend vars as outcome or labels.
 
-#One hot encoding serves the purpose of converting a string column into a all-number column
-#suppose there is column with binary values, such as gender.
-#OHE divides the info into two columns, one for female and one for male.
-# when the original column says "male", a 1 will appear in the male column and a 0 will be on the female column.
+# What if we wanted to get these in a similar scale?
+#Normalization is a technique often applied as part of data preparation for machine learning.
+#The goal of that, is to change the values of the numeric columns in the dataset to a common scales
+# without distorting differences in the ranges of values.
+# Neural networks converge faster when data is normalized.
 
-###### STEP2 one hot encode the info
-insurance_one_hot = pd.get_dummies(insurance_data)
+#create a column transformer.
+ct = make_column_transformer(
+			(MinMaxScaler(), ["age", "bmi","children"]), #turn all values in these columns between zero and one.
+			(OneHotEncoder(handle_unknown="ignore"), ["sex","smoker","region"])
+			)
 
+X = insurance_data.drop("charges", axis=1)
+y = insurance_data["charges"]
 
-#### STEP3 create the data substest to perform NN training and testing
-#drop the charges column to create the X dataset
-X = insurance_one_hot.drop("charges", axis=1)
-#retrieve only the charges colum to create the y labels raw dataset
-y = insurance_one_hot["charges"]
-
-# ¿What is scikit learn? Scikit learn is a Machine Learning library that provides classification, regression and group analysis algorithms.
 
 X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
 
+#Fit the column transformer to our training data
+ct.fit(X_train)
 
+#Transform training and test data with normalization (MinMaxScaler) and OneHotEncoder
+X_train_normal = ct.transform(X_train)
+X_test_normal = ct.transform(X_test)
 
+#What does out data look like now
+
+#print(X_train.loc[0])
+#print(X_train_normal[0])
+
+#############################################################
 
 tf.random.set_seed(42)
 insurance_model = tf.keras.Sequential()
@@ -78,12 +70,12 @@ insurance_model.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history1 = insurance_model.fit(X_train,y_train, epochs=1000,verbose=0)
+history1 = insurance_model.fit(X_train_normal,y_train, epochs=1000,verbose=0)
 
 
 
 #test data set
-print(insurance_model.evaluate(X_test,y_test))
+print(insurance_model.evaluate(X_test_normal,y_test))
 
 ############################################################
 
@@ -103,11 +95,11 @@ insurance_model_2.compile(loss=tf.keras.losses.mae,
                           metrics=['mae'])
 
 # Fit the model and save the history (we can plot this)
-history2 = insurance_model_2.fit(X_train, y_train, epochs=200, verbose=0)
+history2 = insurance_model_2.fit(X_train_normal, y_train, epochs=200, verbose=0)
 
 
 #test data set
-print(insurance_model_2.evaluate(X_test,y_test))
+print(insurance_model_2.evaluate(X_test_normal,y_test))
 
 ############################################################
 
@@ -125,12 +117,12 @@ insurance_model_3.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history3 = insurance_model_3.fit(X_train,y_train, epochs=1000,verbose=0)
+history3 = insurance_model_3.fit(X_train_normal,y_train, epochs=1000,verbose=0)
 
 
 
 #test data set
-print(insurance_model_3.evaluate(X_test,y_test))
+print(insurance_model_3.evaluate(X_test_normal,y_test))
 
 ############################################################
 
@@ -150,8 +142,13 @@ insurance_model4.compile(loss = tf.keras.losses.mae,
               metrics = ["mae"]
               )
 #fit the model
-history4 = insurance_model4.fit(X_train,y_train, epochs=1000,verbose=0)
-print(insurance_model4.evaluate(X_test,y_test))
+history4 = insurance_model4.fit(X_train_normal,y_train, epochs=1000,verbose=0)
+
+
+print(insurance_model4.evaluate(X_test_normal,y_test))
+
+
+
 
 #step 6: visualize the data 
 plt.figure(figsize =(10,7))
@@ -168,11 +165,11 @@ plt.plot(history4.epoch,history4.history["loss"])
 plt.legend()
 #plt.show()
 
-X_plot = listFrom1toN(len(X_test))
-y_pred_1 = insurance_model.predict(X_test)
-y_pred_2 = insurance_model_2.predict(X_test)
-y_pred_3 = insurance_model_3.predict(X_test)
-y_pred_4 = insurance_model4.predict(X_test)
+X_plot = listFrom1toN(len(X_test_normal))
+y_pred_1 = insurance_model.predict(X_test_normal)
+y_pred_2 = insurance_model_2.predict(X_test_normal)
+y_pred_3 = insurance_model_3.predict(X_test_normal)
+y_pred_4 = insurance_model4.predict(X_test_normal)
 
 results = pd.DataFrame(list(zip(y_test,y_pred_1,y_pred_2,y_pred_3,y_pred_4)),columns=["Valor Real","Modelo 1","Modelo 2","Modelo 3","Modelo 4"])
 
