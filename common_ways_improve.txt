@@ -1,0 +1,17 @@
+Common ways to improve a deep model
+
+Adding layers
+increase the number of hidden units
+change the activation functions
+change the optimization functions
+change the learning rate
+fitting on more data
+fitting for longer
+
+
+Non-Linearity: The missing piece
+		For non Linearity please use whatever activation function is available but linear.
+		also, please use "sigmoid" activation in the 1 neuron output layer.
+		Please notice that the output layer needs to contain 1 hidden neuron only. This is to signal the model that we expect single item output
+
+	
