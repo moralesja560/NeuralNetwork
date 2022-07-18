@@ -8,8 +8,6 @@
 
 ## Creating data to view and fit
 import os
-from pyparsing import alphas
-from sklearn import metrics
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 from sklearn.datasets import make_circles
 import pandas as pd
@@ -250,9 +248,14 @@ model_7.compile(
 	metrics=["accuracy"])
  
 #3.Fit the model
-history_7 = model_7.fit(X,y,epochs=250,verbose=1)
+history_7 = model_7.fit(X,y,epochs=250,verbose=0)
 print(f"Evaluación de modelo 7: {model_7.evaluate(X,y)}")
 
-model_7.save(resource_path(r"save_model_Non_Linear"))
-plot_decision_boundary(model_7,X,y)
+#model_7.save(resource_path(r"save_model_Non_Linear"))
+#plot_decision_boundary(model_7,X,y)
+
+
+#plot the loss or training curves
+
+print(history_7)
 
