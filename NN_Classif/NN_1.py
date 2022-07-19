@@ -248,7 +248,7 @@ model_7.compile(
 	metrics=["accuracy"])
  
 #3.Fit the model
-history_7 = model_7.fit(X,y,epochs=250,verbose=0)
+history_7 = model_7.fit(X,y,epochs=50,verbose=0)
 print(f"Evaluación de modelo 7: {model_7.evaluate(X,y)}")
 
 #model_7.save(resource_path(r"save_model_Non_Linear"))
@@ -257,5 +257,11 @@ print(f"Evaluación de modelo 7: {model_7.evaluate(X,y)}")
 
 #plot the loss or training curves
 
-print(history_7)
+history_7_df = pd.DataFrame(history_7.history)
+
+history_7_df.plot()
+plt.title("Model 7 loss curves")
+plt.show()
+
+
 
