@@ -23,7 +23,8 @@ Most of the models written here come from the TensorFlow Developer Certification
 
 + Training 1/2/3 : Three linear regression models
 
-+ Loading_neural_model1/2/3: Three files that load pre-trained models.
++ Loading_neural_model1/2/3: Three files that load pre-trained models
+   + Folders for these pre-trained model are in the main directory
 
 + multi-var_NN.py: A linear regression model with many independent variables.
 
