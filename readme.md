@@ -1,6 +1,6 @@
 # Neural Network Training 
 
-Neural Networks (NN) are computing models designed to find underlying relationships within the data that is fed to the model. Its name comes from the resemblance with the human brain and how brain cells are interconnected.
+Neural Networks (NN) are computing models designed to find underlying relationships within the data that is fed to the model. Its name comes from the resemblance with the human brain and how neurons are deeply interconnected.
 
 Most of the models written here come from the TensorFlow Developer Certification Course available in Udemy
 
@@ -17,3 +17,18 @@ Most of the models written here come from the TensorFlow Developer Certification
 + load_non_linear.py: This file loads a pre-trained model, inputs a random dataset created in Excel and plots how are the predictions with the real life dataset.
 
 + more_classif_methods.py: This file shows how to create a confusion matrix.
+
+### NN_Linear
++ MSE vs MAE.py:A file to compare the same model but with different loss function Mean Average Error and Mean Squared Error
+
++ Training 1/2/3 : Three linear regression models
+
++ Loading_neural_model1/2/3: Three files that load pre-trained models.
+
++ multi-var_NN.py: A linear regression model with many independent variables.
+
++ Norm_Stand.py: A file to demonstrate how to normalize and standardize data.
+
+
+
+
