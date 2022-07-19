@@ -30,6 +30,10 @@ Most of the models written here come from the TensorFlow Developer Certification
 
 + Norm_Stand.py: A file to demonstrate how to normalize and standardize data.
 
+### Resources
 
++ data.csv : A simple dataset to test linear regression
++ data_model7.csv: This is the Excel file that contains the non-linear random data for the model to predict from.
++ insurance.csv: This file is used in the Multivar_NN.py
 
 
