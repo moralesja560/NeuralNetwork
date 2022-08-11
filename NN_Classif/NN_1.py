@@ -71,15 +71,15 @@ n_samples = 1000
 X,y = make_circles(n_samples,noise=0.03,random_state=42)
 
 #check out features
-#print(X)
+print(X)
 #check labels
-#print(y)
+print(y)
 
 circles = pd.DataFrame({"X0":X[:,0],"X1":X[:,1],"label":y})
 
 circles.to_csv('circulos.csv')
 
-#print(circles)
+print(circles)
 
 #plot this
 plt.scatter(circles["X0"],circles["X1"],c=y,cmap=plt.cm.RdYlBu)
