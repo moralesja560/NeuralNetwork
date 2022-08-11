@@ -127,49 +127,52 @@ print(confusion_matrix(y_test,y_preds))
 
 import itertools
 
-figsize = (10,10)
-#create the confusion matrix
-cm = confusion_matrix(y_test,tf.round(y_preds))
-cm_norm = cm.astype("float") / cm.sum(axis=1)[:,np.newaxis]
-n_classes = cm.shape[0]
-fig, ax = plt.subplots(figsize=figsize)
-#create a matrix plot 
-cax = ax.matshow(cm, cmap=plt.cm.Blues)
-fig.colorbar(cax)
+def plot_confusion_matrix(test_y,pred_y):
+	figsize = (10,10)
+	#create the confusion matrix
+	cm = confusion_matrix(test_y,tf.round(pred_y))
+	cm_norm = cm.astype("float") / cm.sum(axis=1)[:,np.newaxis]
+	n_classes = cm.shape[0]
+	fig, ax = plt.subplots(figsize=figsize)
+	#create a matrix plot 
+	cax = ax.matshow(cm, cmap=plt.cm.Blues)
+	fig.colorbar(cax)
 
-#create classes
-classes = False
+	#create classes
+	classes = False
 
-if classes:
-	labels = classes
-else:
-	labels = np.arange(cm.shape[0])
+	if classes:
+		labels = classes
+	else:
+		labels = np.arange(cm.shape[0])
 
-# label the axes
-ax.set(title = "Confusion Matrix", 
-		xlabel = "Predicted Label",
-		ylabel = "True Label",
-		xticks = np.arange(n_classes),
-		yticks = np.arange(n_classes),
-		xticklabels = labels,
-		yticklabels = labels,
-		)
+	# label the axes
+	ax.set(title = "Confusion Matrix", 
+			xlabel = "Predicted Label",
+			ylabel = "True Label",
+			xticks = np.arange(n_classes),
+			yticks = np.arange(n_classes),
+			xticklabels = labels,
+			yticklabels = labels,
+			)
 
-#more adjustments
-ax.xaxis.set_label_position("bottom")
-ax.xaxis.tick_bottom()
-ax.yaxis.label.set_size(20)
-ax.xaxis.label.set_size(20)
-ax.title.set_size(20)
+	#more adjustments
+	ax.xaxis.set_label_position("bottom")
+	ax.xaxis.tick_bottom()
+	ax.yaxis.label.set_size(20)
+	ax.xaxis.label.set_size(20)
+	ax.title.set_size(20)
 
-# Set threshold for different colors
-threshold = (cm.max() + cm.min())/2
+	# Set threshold for different colors
+	threshold = (cm.max() + cm.min())/2
 
-#plot the text on each cell
-for i,j in itertools.product(range(cm.shape[0]),range(cm.shape[1])):
-	plt.text(j,i, f"{cm[i,j]} ({cm_norm[i,j]*100:.1f}%)",
-		horizontalalignment = "center",
-		color="white" if cm[i,j]>threshold else "black",
-		size = 15)
+	#plot the text on each cell
+	for i,j in itertools.product(range(cm.shape[0]),range(cm.shape[1])):
+		plt.text(j,i, f"{cm[i,j]} ({cm_norm[i,j]*100:.1f}%)",
+			horizontalalignment = "center",
+			color="white" if cm[i,j]>threshold else "black",
+			size = 15)
 
-plt.show()
+	plt.show()
+
+plot_confusion_matrix(y_test,y_preds)

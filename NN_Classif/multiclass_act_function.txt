@@ -1,0 +1,13 @@
+Architecture of a classification model
+
+		Hyperparameter		|	Binary classification  		|   Multi-class classification
+
+Input layer shape			|	Same as # of features		|	Same as Binary 	
+Hidden layer				|	Problem specific			|	Same as Binary
+Neurons per hidden layer	|	Problem specific			|	Same as Binary
+Output layer shape			|	1 (One class or the other)	|	1 per class
+Hidden activation			|	Usually ReLU				|	Same as Binary
+Output activation			|	Sigmoid						|	Softmax
+Loss function				|	Cross Entropy				|	CategoricalCrossEntropy
+Optimizer					|	SGD or Adam					|	Same as Binary classification
+

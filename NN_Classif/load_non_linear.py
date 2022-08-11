@@ -66,12 +66,13 @@ X,y = make_circles(n_samples,noise=0.03,random_state=42)
 
 
 #STEP2: Load the neural model
+print(resource_path(r"save_model_Non_Linear"))
 new_model = tf.keras.models.load_model(resource_path(r"save_model_Non_Linear"))
 	# Check its architecture
 new_model.summary()
 
 #STEP3: Load the real world data 
-df = pd.read_csv(r'c:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\data_model7.csv')
+df = pd.read_csv(r'c:\Users\SKU 80093\Documents\Python_Scripts\NeuralNetwork\resources\data_model7.csv')
 
 
 #Step 4: Prepare the dictionaries to store the model output data.
