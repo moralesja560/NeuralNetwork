@@ -1,6 +1,7 @@
 
 from lib2to3.pgen2.literals import simple_escapes
 import os
+from statistics import mean
 from typing import ChainMap
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 from posixpath import split
@@ -185,6 +186,8 @@ housing = strat_train_set.drop("median_house_value", axis=1)
 # copy the train set again, but only the features
 housing_labels = strat_train_set["median_house_value"].copy()
 
+
+
 ######### Data Cleaning
 
 # in this case, total bedroom has some missing values, so we have 3 options: 
@@ -240,7 +243,7 @@ print(ordinal_encoder.categories_)
 
 cat_encoder = OneHotEncoder()
 housing_cat_1hot = cat_encoder.fit_transform(housing_cat)
-print(housing_cat_1hot)
+#print(housing_cat_1hot)
 
 
 # TIME TO WRITE A CLASS TO HELP DO ALL OF THIS STUFF IN AN AUTOMATED WAY
@@ -303,5 +306,71 @@ housing_prepared = full_pipeline.fit_transform(housing)
 # we import the ColumnTransformer, then we retrieve the list of numerical and non numerical column names
 # in the full pipeline, we provide a step name, a transformer and a list of stuff which the transformer will be applied to 
 
-print(housing_prepared)
 
+#####----------------- TRAIN A LINEAR REGRESSION MODEL -------------------------#####
+
+from sklearn.linear_model import LinearRegression
+
+lin_reg = LinearRegression()
+lin_reg.fit(housing_prepared,housing_labels)
+
+#the Linear Regression Model is already trained, let's try it with some data
+
+some_data = housing.iloc[:5]
+some_labels = housing_labels.iloc[:5]
+some_data_prepared = full_pipeline.transform(some_data)
+print(f" Predictions: {lin_reg.predict(some_data_prepared)}")
+print(f"Truth: {list(some_labels)}")
+
+print(housing_labels)
+
+# we've received our first prediction, but it was far off from what we expected
+# Let's compute the MSE
+
+from sklearn.metrics import mean_squared_error
+
+housing_predictions = lin_reg.predict(housing_prepared)
+lin_mse = mean_squared_error(housing_labels,housing_predictions)
+lin_rmse = np.sqrt(lin_mse)
+#print(lin_rmse)
+
+# we're off by $68,721. Most house prices range between 120k and 265k, so being off by 68k is terribly bad.
+
+tf_housing_labels= tf.convert_to_tensor(housing_labels)
+#print(tf_housing_labels)
+tf_housing_prepared = tf.convert_to_tensor(housing_prepared)
+#print(tf_housing_prepared)
+
+
+# Add an extra layer and increase number of units
+
+
+model_7 = tf.keras.Sequential([
+	tf.keras.layers.Dense(150,activation="tanh"),
+	tf.keras.layers.Dense(150,activation="tanh"),
+	tf.keras.layers.Dense(150,activation="tanh"),
+	tf.keras.layers.Dense(1,activation="sigmoid")
+])
+
+#2 Compile the model
+model_7.compile(
+	loss = tf.keras.losses.BinaryCrossentropy(),
+	optimizer=tf.keras.optimizers.Adam(),
+	metrics=["mae"])
+ 
+#2.5 Create a learning rate callback
+lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
+
+#3.Fit the model
+history_7 = model_7.fit(tf_housing_prepared,tf_housing_labels,epochs=200,callbacks=[lr_scheduler], verbose=1)
+
+print(f"Evaluación de modelo 7: {model_7.evaluate(tf_housing_prepared,tf_housing_labels)}")
+
+history_7_df = pd.DataFrame(history_7.history)
+
+#model_7.save(resource_path(r"save_model_Non_Linear"))
+#plot_decision_boundary(model_7,X,y)
+
+temp_model_7_df = history_7_df.drop("accuracy",axis=1)
+temp_model_7_df.plot()
+plt.show()
