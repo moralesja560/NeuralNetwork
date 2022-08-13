@@ -244,17 +244,64 @@ print(housing_cat_1hot)
 
 
 # TIME TO WRITE A CLASS TO HELP DO ALL OF THIS STUFF IN AN AUTOMATED WAY
+from sklearn.base import BaseEstimator, TransformerMixin
+
+rooms_ix, bedrooms_ix, population_ix, households_ix = 3,4,5,6
+
+class CombinedAttributesAdder(BaseEstimator,TransformerMixin):
+	def __init__(self,add_bedrooms_per_room =True):
+		self.add_bedrooms_per_room = add_bedrooms_per_room
+	def fit(self,X,y=None):
+		return self
+	def transform(self,X,y=None):
+		rooms_per_household = X[:, rooms_ix] / X[:, households_ix]
+		population_per_household = X[:, bedrooms_ix] / X[:, rooms_ix]
+		if self.add_bedrooms_per_room:
+			bedrooms_per_room = X[:, bedrooms_ix] / X[:, rooms_ix]
+			return np.c_[X, rooms_per_household, population_per_household, bedrooms_per_room]
+		else:
+			return np.c_[X, rooms_per_household, population_per_household]
+
+housing_extra_attribs = CombinedAttributesAdder(add_bedrooms_per_room=False).transform(housing.values)
+
+# this automated transformer has ONE hyperparameter: Add bedrooms per room
+	# the objective is to feed the ML algorithm the info and decide if the presence of the column "bedrooms per room" benefits the ML
+
+##### FEATURE SCALING - MIN_MAX AND STANDARDIZATION
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+
+num_pipeline = Pipeline([
+				('imputer', SimpleImputer(strategy="median")),
+				('attribs_adder', CombinedAttributesAdder()),
+				('std_scaler', StandardScaler()),
+				])
 
 
+housing_num_tr = num_pipeline.fit(housing_num)  
+		# housing_num is the original data minus the Ocean_proximity. It is the data from before the imputer
+
+# The pipeline constructor takes a list of name/estimator pairs, defining a sequence of transformation steps.
+# All but the last estimator must have a fit_transform method.
+# Call pipeline.fit to call fit_transform on every step on the pipeline, except the final step, where the pipeline will call only fit
 
 
+## THE COMPLETE PIPELINE TO HANDLE NUMERICAL (NUM_PIPELINE) AND TEXT/CAT DATA (CAT_ATTRIBS)
 
-#from sklearn.compose import ColumnTransformer
-#num_attribs = list(housing_num)
-#cat_attribs = ["ocean_proximity"]
-#full_pipeline = ColumnTransformer([
-#("num", num_pipeline, num_attribs),
-#("cat", OneHotEncoder(), cat_attribs),
-#])
-#housing_prepared = full_pipeline.fit_transform(housing)
+from sklearn.compose import ColumnTransformer
+
+num_attribs = list(housing_num)
+cat_attribs = ["ocean_proximity"]
+
+full_pipeline = ColumnTransformer([
+	("num", num_pipeline, num_attribs),
+	("cat", OneHotEncoder(), cat_attribs),
+	])
+housing_prepared = full_pipeline.fit_transform(housing)
+
+# we import the ColumnTransformer, then we retrieve the list of numerical and non numerical column names
+# in the full pipeline, we provide a step name, a transformer and a list of stuff which the transformer will be applied to 
+
+print(housing_prepared)
 
