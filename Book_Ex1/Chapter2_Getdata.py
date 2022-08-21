@@ -415,6 +415,36 @@ print(f" Forest RMSE Scores: {forest_rmse_scores}")
 # think this models are overfitting the data
 # Please notice something: The goal of these tests is to select two or three models that, without much tweaking, can get promising results.
 
+## another model: SVR (Support Vector Machine)
+
+from sklearn.svm import SVR
+
+SVR_reg = RandomForestRegressor()
+
+SVR_reg.fit(housing_prepared,housing_labels)
+
+housing_predictions = SVR_reg.predict(housing_prepared)
+
+SVR_mse = mean_squared_error(housing_labels,housing_predictions)
+
+SVR_mse = np.sqrt(SVR_mse)
+print(f" SVR MSE: {SVR_mse}")
+
+scores = cross_val_score(
+		SVR_reg, # forest tree regressor
+		housing_prepared, #the information that got through the pipeline
+		housing_labels, # dataframe containing only labels
+		scoring="neg_mean_squared_error",
+		cv=10)
+
+SVR_rmse_scores = np.sqrt(-scores)
+
+print(f" SVR RMSE Scores: {SVR_rmse_scores}")
+
+
+
+
+
 #------------------------FINE TUNING THE SELECTED MODELS---------------------#
 
 # GridSearchCV is a very important tool to test all possible combinations of hyperparameters.
@@ -440,24 +470,51 @@ grid_search = GridSearchCV(
 grid_search.fit(housing_prepared,housing_labels)
 
 # get the best parameters
-
 print(f" best parameters {grid_search.best_params_}")
 
-
 # get the best estimator
-
 print(f" best estimator {grid_search.best_estimator_}")
-
 print(f"\n")
 
 #get the evaluation scores
-
 cvres = grid_search.cv_results_
-
 for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
 	print(np.sqrt(-mean_score),params)
 
-# best results:  50421.19931367459 {'max_features': 10, 'n_estimators': 30} and with add_bedroom hyper param = True
+#RandomForestRegressor can indicate the relative importante of each attribute
 
+feature_importances = grid_search.best_estimator_.feature_importances_
 
-# page 81
+print(f" Feature importances: {feature_importances}")
+
+# Now display the feature importances and its names
+#adding the missing labels that were created in this code
+extra_attribs = ["rooms per houselhold", "pop_per_households", "bedroom_per_room"]
+#calling only the category encoder from the pipeline
+cat_encoder = full_pipeline.named_transformers_["cat"]
+#saving only the category names into cat_one_hot_attribs
+cat_one_hot_attribs = list(cat_encoder.categories_[0])
+#concatenate all data into attributes
+attributes = num_attribs + extra_attribs + cat_one_hot_attribs
+#display the sorted data 
+print(sorted(zip(feature_importances,attributes), reverse=True))
+
+##----------------------Evaluate the system on the Test set ----------------#
+
+final_model = grid_search.best_estimator_
+
+X_test = strat_test_set.drop("median_house_value", axis=1)
+Y_test = strat_test_set["median_house_value"].copy()
+
+# Please note the difference between this line and line in 303. Use transform only to transform the data, not fit_transform.
+	# we do not want to fit the test set
+X_test_prepared = full_pipeline.transform(X_test)
+
+final_predictions = final_model.predict(X_test_prepared)
+
+final_mse = mean_squared_error(Y_test,final_predictions)
+final_rmse = np.sqrt(final_mse)
+
+print(f" Final MSE: {final_mse}")
+print(f" Final RMSE: {final_rmse}")
+
