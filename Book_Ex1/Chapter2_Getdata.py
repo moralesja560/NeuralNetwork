@@ -1,8 +1,6 @@
 
-from lib2to3.pgen2.literals import simple_escapes
 import os
 from statistics import mean
-from typing import ChainMap
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 from posixpath import split
 import tarfile
@@ -207,7 +205,7 @@ housing_num = housing.drop("ocean_proximity", axis=1)
 imputer.fit(housing_num)
 
 # even if your dataset only have one incomplete column, it's safer to apply imputer to all numerical columns.
-print(imputer.statistics_)
+#print(imputer.statistics_)
 
 # let's actually replace the missing values within the dataset
 X = imputer.transform(housing_num)
@@ -215,7 +213,7 @@ X = imputer.transform(housing_num)
 housing_tr= pd.DataFrame(X,columns=housing_num.columns)
 
 #by using the print below, we can check that now all the columns have the same number of values
-print(housing_tr.describe())
+#print(housing_tr.describe())
 
 
 ### handling text and categorical attributes
@@ -232,9 +230,9 @@ ordinal_encoder = OrdinalEncoder()
 housing_cat_encoded = ordinal_encoder.fit_transform(housing_cat)
 
 # see how the encoding went
-print(housing_cat_encoded[:10])
+#print(housing_cat_encoded[:10])
 # see the categories that were replaced by numbers
-print(ordinal_encoder.categories_)
+#print(ordinal_encoder.categories_)
 
 # Here, we have 5 categories of ocean proximity. A one-hot encoding will produce 5 columns
 	# each column will be zero except the column that matches the data.
@@ -266,6 +264,7 @@ class CombinedAttributesAdder(BaseEstimator,TransformerMixin):
 			return np.c_[X, rooms_per_household, population_per_household]
 
 housing_extra_attribs = CombinedAttributesAdder(add_bedrooms_per_room=False).transform(housing.values)
+
 
 # this automated transformer has ONE hyperparameter: Add bedrooms per room
 	# the objective is to feed the ML algorithm the info and decide if the presence of the column "bedrooms per room" benefits the ML
@@ -322,7 +321,6 @@ some_data_prepared = full_pipeline.transform(some_data)
 print(f" Predictions: {lin_reg.predict(some_data_prepared)}")
 print(f"Truth: {list(some_labels)}")
 
-print(housing_labels)
 
 # we've received our first prediction, but it was far off from what we expected
 # Let's compute the MSE
@@ -332,45 +330,134 @@ from sklearn.metrics import mean_squared_error
 housing_predictions = lin_reg.predict(housing_prepared)
 lin_mse = mean_squared_error(housing_labels,housing_predictions)
 lin_rmse = np.sqrt(lin_mse)
-#print(lin_rmse)
+print(lin_rmse)
 
 # we're off by $68,721. Most house prices range between 120k and 265k, so being off by 68k is terribly bad.
 
-tf_housing_labels= tf.convert_to_tensor(housing_labels)
+#tf_housing_labels= tf.convert_to_tensor(housing_labels)
 #print(tf_housing_labels)
-tf_housing_prepared = tf.convert_to_tensor(housing_prepared)
+#tf_housing_prepared = tf.convert_to_tensor(housing_prepared)
 #print(tf_housing_prepared)
 
+#housing_prepared_df = pd.DataFrame(housing_prepared)
 
-# Add an extra layer and increase number of units
+#exp_housing = housing_prepared_df.to_csv(r"C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\Book_Ex1\housing_prepared.csv")
+#exp_housing_l = housing_labels.to_csv(r"C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\Book_Ex1\housing_labels.csv")
+
+#Let's train a DecisionTreeRegresor, a more powerful model, capable of finding complex nonlinear relationships
+
+from sklearn.tree import DecisionTreeRegressor
+
+tree_reg = DecisionTreeRegressor()
+
+tree_reg.fit(housing_prepared,housing_labels)
+
+housing_predictions = tree_reg.predict(housing_prepared)
+
+tree_mse = mean_squared_error(housing_labels,housing_predictions)
+
+tree_mse = np.sqrt(tree_mse)
+print(f" Tree MSE: {tree_mse}")
+
+#the tree_mse is 0, so this model is technically absolutely perfect. But we know it may have overfit the data
+
+#------------------EVALUATION TECHNIQUE: CROSS VALIDATION-----------------------#
+
+# One way to evaluate the Decision Tree model would be to use the train_test_split AGAIN to split the training set into a training/test subset
+# Let's use Scikit-Learn's K-fold cross validation feature
+# It will split the training set into 10 folds and train the model using 9 folds and evaluating against 1 random fold.
+
+from sklearn.model_selection import cross_val_score
+
+scores = cross_val_score(
+		tree_reg, # decision tree regressor
+		housing_prepared, #the information that got through the pipeline
+		housing_labels, # dataframe containing only labels
+		scoring="neg_mean_squared_error",
+		cv=10)
+
+tree_rmse_scores = np.sqrt(-scores)
+
+print(f" tree RMSE: {tree_rmse_scores}")
+
+#[70826.71443491 68297.28520425 69681.9349547  72449.65733286 68789.2434467  71034.30847089 73761.06066747 66600.8923391 65767.05709785 72887.81778947]
+
+#still too bad. with scores.mean() and scores.std() we can know that the Decision Tree has an avg of 71,000 with +/- 2439
+
+# Let's try RandomForestRegressor
+
+from sklearn.ensemble import RandomForestRegressor
+
+forest_reg = RandomForestRegressor()
+
+forest_reg.fit(housing_prepared,housing_labels)
+
+housing_predictions = forest_reg.predict(housing_prepared)
+
+forest_mse = mean_squared_error(housing_labels,housing_predictions)
+
+forest_mse = np.sqrt(forest_mse)
+print(f" Forest MSE: {forest_mse}")
+
+scores = cross_val_score(
+		forest_reg, # forest tree regressor
+		housing_prepared, #the information that got through the pipeline
+		housing_labels, # dataframe containing only labels
+		scoring="neg_mean_squared_error",
+		cv=10)
+
+forest_rmse_scores = np.sqrt(-scores)
+
+print(f" Forest RMSE Scores: {forest_rmse_scores}")
+
+#  Forest RMSE Scores: [50886.26 49312.96 46463.198 51270.35 47336.98 50154.82 50929.00 48956.73 47411.97 53530.42]
+# still bad but better
+# think this models are overfitting the data
+# Please notice something: The goal of these tests is to select two or three models that, without much tweaking, can get promising results.
+
+#------------------------FINE TUNING THE SELECTED MODELS---------------------#
+
+# GridSearchCV is a very important tool to test all possible combinations of hyperparameters.
+from sklearn.model_selection import GridSearchCV
+# parameters and possible values
+param_grid = [
+	{	'n_estimators': [3,10,30],  # 3 possible parameters of n_estimators
+		'max_features': [2,4,6,8,10]},	# 4 possible parameters of max_features
+	{	'bootstrap': [False],		# change this binary parameter
+		'n_estimators': [3,10,30],		# 3 params
+		'max_features': [2,3,4,5,6]},]	#  3 params
+
+forest_reg = RandomForestRegressor()
+
+grid_search = GridSearchCV(
+				forest_reg,
+				param_grid=param_grid,
+				cv=5, 
+				scoring = 'neg_mean_squared_error',
+				return_train_score=True
+)
+
+grid_search.fit(housing_prepared,housing_labels)
+
+# get the best parameters
+
+print(f" best parameters {grid_search.best_params_}")
 
 
-model_7 = tf.keras.Sequential([
-	tf.keras.layers.Dense(150,activation="tanh"),
-	tf.keras.layers.Dense(150,activation="tanh"),
-	tf.keras.layers.Dense(150,activation="tanh"),
-	tf.keras.layers.Dense(1,activation="sigmoid")
-])
+# get the best estimator
 
-#2 Compile the model
-model_7.compile(
-	loss = tf.keras.losses.BinaryCrossentropy(),
-	optimizer=tf.keras.optimizers.Adam(),
-	metrics=["mae"])
- 
-#2.5 Create a learning rate callback
-lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
+print(f" best estimator {grid_search.best_estimator_}")
 
-#3.Fit the model
-history_7 = model_7.fit(tf_housing_prepared,tf_housing_labels,epochs=200,callbacks=[lr_scheduler], verbose=1)
+print(f"\n")
 
-print(f"Evaluación de modelo 7: {model_7.evaluate(tf_housing_prepared,tf_housing_labels)}")
+#get the evaluation scores
 
-history_7_df = pd.DataFrame(history_7.history)
+cvres = grid_search.cv_results_
 
-#model_7.save(resource_path(r"save_model_Non_Linear"))
-#plot_decision_boundary(model_7,X,y)
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+	print(np.sqrt(-mean_score),params)
 
-temp_model_7_df = history_7_df.drop("accuracy",axis=1)
-temp_model_7_df.plot()
-plt.show()
+# best results:  50421.19931367459 {'max_features': 10, 'n_estimators': 30} and with add_bedroom hyper param = True
+
+
+# page 81
