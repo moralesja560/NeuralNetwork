@@ -419,7 +419,7 @@ print(f" Forest RMSE Scores: {forest_rmse_scores}")
 
 from sklearn.svm import SVR
 
-SVR_reg = RandomForestRegressor()
+SVR_reg = SVR()
 
 SVR_reg.fit(housing_prepared,housing_labels)
 
@@ -499,9 +499,45 @@ attributes = num_attribs + extra_attribs + cat_one_hot_attribs
 #display the sorted data 
 print(sorted(zip(feature_importances,attributes), reverse=True))
 
-##----------------------Evaluate the system on the Test set ----------------#
+print('##_________________SVR___________________##')
 
-final_model = grid_search.best_estimator_
+param_grid2 = [
+	{	'kernel': ["linear"],
+		'C': [1.0],
+		'degree': [1,2],
+		'gamma': ['scale']},	
+	{	'kernel': ["rbf"],
+		'C': [1.0],
+		'gamma': ['scale'],
+		'degree': [1,2,3]},	]	
+
+SVR_reg = SVR()
+
+grid_searchSVR = GridSearchCV(
+				SVR_reg,
+				param_grid=param_grid2,
+				cv=5, 
+				scoring = 'neg_mean_squared_error',
+				return_train_score=True
+)
+
+grid_searchSVR.fit(housing_prepared,housing_labels)
+
+# get the best parameters
+print(f" best parameters SVR {grid_searchSVR.best_params_}")
+
+# get the best estimator
+print(f" best estimator SVR {grid_searchSVR.best_estimator_}")
+print(f"\n")
+
+#get the evaluation scores
+cvres = grid_searchSVR.cv_results_
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+	print(np.sqrt(-mean_score),params)
+
+
+
+##-----------------prepare the test data for model evaluation---------------#
 
 X_test = strat_test_set.drop("median_house_value", axis=1)
 Y_test = strat_test_set["median_house_value"].copy()
@@ -510,11 +546,31 @@ Y_test = strat_test_set["median_house_value"].copy()
 	# we do not want to fit the test set
 X_test_prepared = full_pipeline.transform(X_test)
 
-final_predictions = final_model.predict(X_test_prepared)
+##----------------------Evaluate the Forest system on the Test set ----------------#
 
-final_mse = mean_squared_error(Y_test,final_predictions)
-final_rmse = np.sqrt(final_mse)
+final_model_F = grid_search.best_estimator_
 
-print(f" Final MSE: {final_mse}")
-print(f" Final RMSE: {final_rmse}")
+final_predictions_F = final_model_F.predict(X_test_prepared)
+
+final_mse_F = mean_squared_error(Y_test,final_predictions_F)
+final_rmse_F = np.sqrt(final_mse_F)
+
+print(f" Final MSE Forest: {final_mse_F}")
+print(f" Final RMSE Forest: {final_rmse_F}")
+
+##----------------------Evaluate the SVR system on the Test set ----------------#
+
+final_model_SVR = grid_searchSVR.best_estimator_
+
+final_predictions = final_model_SVR.predict(X_test_prepared)
+
+final_mse_SVR = mean_squared_error(Y_test,final_predictions)
+final_rmse_SVR = np.sqrt(final_mse_SVR)
+
+print(f" Final MSE SVR: {final_mse_SVR}")
+print(f" Final RMSE SVR: {final_rmse_SVR}")
+
+
+
+
 
