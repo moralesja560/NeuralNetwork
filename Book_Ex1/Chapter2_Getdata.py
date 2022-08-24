@@ -184,7 +184,7 @@ housing = strat_train_set.drop("median_house_value", axis=1)
 # copy the train set again, but only the features
 housing_labels = strat_train_set["median_house_value"].copy()
 
-
+print(housing_labels.head())
 
 ######### Data Cleaning
 

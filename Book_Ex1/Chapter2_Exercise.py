@@ -24,6 +24,9 @@ def resource_path(relative_path):
 #Load the data
 	# Notice that in this particular dataset, the first column has no name. I had to name it "index" to prevent the "Unnamed:0" error
 smoke_det_df = pd.read_csv(resource_path('smoke_detection_iot.csv'),index_col=['index'])
+# I believe we may need to remove the UTC and CNT columns, they're not even attributes , just a chronological timestamp info and a counter.
+smoke_det_df.drop('UTC', inplace=True, axis=1)
+smoke_det_df.drop('CNT', inplace=True, axis=1)
 
 #display the data structure
 print(smoke_det_df.head())
@@ -31,6 +34,8 @@ print(smoke_det_df.head())
 print(smoke_det_df.info())
 #describe data statistical indicators
 print(smoke_det_df.describe())
+
+
 
 ## All numbers, great. i think we may only need to scale and standardize the data, so not one-hot encoding needed
 
@@ -106,8 +111,89 @@ print(f" original proportions: {original_proportions}")
 
 for set_ in (strat_train_set, strat_test_set):
 	set_.drop("Humidity_S", axis=1, inplace=True)
+	set_.drop("Temperature_R", axis=1, inplace=True)
 
-###-----------------------Gain Data Insights-----#
+###-----------------------GAIN DATA INSIGHTS-----#
+
+# First, a copy to protect the original data from mishandling
+smoke_df = strat_train_set.copy()
+
+
+# Let's calculate the standard correlation coefficient between every pair of attributes.
+# Remember: Fire Alarm is the independent variable that will be predicted by this model
+
+corr_matrix = smoke_df.corr()
+
+print(corr_matrix["Fire Alarm"].sort_values(ascending=False))
+
+## Pretty interesting stuff
+
+# Fire Alarm        1.000000
+# Humidity[%]       0.396037
+# Pressure[hPa]     0.243615
+# Raw H2            0.105488
+# NC2.5            -0.055800
+# NC1.0            -0.080361
+# PM2.5            -0.082439
+# eCO2[ppm]        -0.093245
+# PM1.0            -0.108479
+# NC0.5            -0.126891
+# Temperature[C]   -0.163398
+# TVOC[ppb]        -0.213736
+# Raw Ethanol      -0.341358
+
+# humidity has the strongest positive correlation with Fire Alarm. Humidity goes up when Fire Alarm goes up.
+# Raw Ethanol has the stronges negative correlation with Fire Alarm. Raw Ethanol goes down when Fire Alarm goes up.
+
+## let's use pandas to visually check this correlations
+
+from pandas.plotting import scatter_matrix
+attributes = ["Fire Alarm", "Humidity[%]", "Pressure[hPa]", "Raw Ethanol", "TVOC[ppb]"]
+#scatter_matrix(smoke_df[attributes], figsize=(12, 8))
+#plt.show()
+
+##----------COMBINING ATTRIBUTES-------------------#
+
+# similar to an Excel's Pivot Table calculated column, let's try a few attributes combination to see if 
+# the combination results in better correlation with the labels ("Fire Alarm" column )
+
+# Looked up in google: Higher levels of CO2 will increase the humidity.
+
+smoke_df["CO2xHumidity"] = smoke_df["Humidity[%]"]*smoke_df["eCO2[ppm]"]
+corr_matrix = smoke_df.corr()
+print(corr_matrix["Fire Alarm"].sort_values(ascending=False))
+
+# Not much of a success: CO2xHumidity     -0.049772
+
+smoke_df["CO2/Humidity"] = smoke_df["eCO2[ppm]"]/smoke_df["Humidity[%]"]
+corr_matrix = smoke_df.corr()
+print(corr_matrix["Fire Alarm"].sort_values(ascending=False))
+
+# Same, not much succes:  CO2/Humidity     -0.095861
+
+###------------PREPARE THE DATA FOR MACHINE LEARNING ALGORITHMS-----------------####
+smoke_df2 = strat_train_set.copy()
+
+## TIME TO SEPARATE THE DATA IN FEATURES AND LABELS
+
+smoke_feat = smoke_df2.drop("Fire Alarm", axis=1)
+smoke_labels = smoke_df2["Fire Alarm"].copy()
+
+print(smoke_feat.head())
+print(smoke_labels.head())
+
+####-------------FILLING THE BLANKS-------------------#
+
+# most ML algorithms cannot work if there are missing values in the training set.
+# a solution might be to replace missing values with the average column value.
+
+from sklearn.impute import SimpleImputer
+
+# load the SimpleImputer and select the strategy
+imputer = SimpleImputer(strategy="mean")
+#
+
+
 
 
 
