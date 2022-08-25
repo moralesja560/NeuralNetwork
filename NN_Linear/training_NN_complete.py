@@ -26,7 +26,7 @@ y_test_data = []
 y_pred = []
 
 #step 1.1: load data from CSV
-with open(resource_path("resources/data.csv")) as file:
+with open(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\data.csv') as file:
 	type(file)
 	csvreader = csv.reader(file)
 	header = []

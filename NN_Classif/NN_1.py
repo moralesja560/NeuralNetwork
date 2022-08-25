@@ -251,8 +251,8 @@ model_7.compile(
 history_7 = model_7.fit(X,y,epochs=50,verbose=0)
 print(f"Evaluación de modelo 7: {model_7.evaluate(X,y)}")
 
-model_7.save(resource_path(r"save_model_Non_Linear"))
-#plot_decision_boundary(model_7,X,y)
+#model_7.save(resource_path(r"save_model_Non_Linear"))
+plot_decision_boundary(model_7,X,y)
 
 
 #plot the loss or training curves

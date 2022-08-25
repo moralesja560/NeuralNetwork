@@ -41,7 +41,7 @@ print(smoke_det_df.describe())
 
 ###---------Data insight
 smoke_det_df.hist(bins=50, figsize=(14,10))
-plt.show()
+#plt.show()
 
 
 ##----------------------TRAINING AND VALIDATION DATASETS: CLASSIC APPROACH------------------#
@@ -107,7 +107,7 @@ print(f" original proportions: {original_proportions}")
 # 6    0.004183
 # 7    0.000000
 
-## DROP the column used in stratified sampling: "Humidity_S"
+## DROP the columns used in stratified sampling: "Humidity_S" and "Temperature_R"
 
 for set_ in (strat_train_set, strat_test_set):
 	set_.drop("Humidity_S", axis=1, inplace=True)
@@ -185,16 +185,91 @@ print(smoke_labels.head())
 ####-------------FILLING THE BLANKS-------------------#
 
 # most ML algorithms cannot work if there are missing values in the training set.
-# a solution might be to replace missing values with the average column value.
+# a solution might be to replace missing values with the median (not average) column value.
+# this procedure is not necessary, but it's safer to apply when on a data pipeline
 
 from sklearn.impute import SimpleImputer
 
 # load the SimpleImputer and select the strategy
-imputer = SimpleImputer(strategy="mean")
-#
+imputer = SimpleImputer(strategy="median")
+
+#In this case, our dataset has not categorical columns. Please use pandas.drop to remove any categorical/text column
+imputer.fit(smoke_feat)
+#let's see what the imputer came up with:
+print(imputer.statistics_)
+# are these numbers really the median of every column?
+print(smoke_feat.median().values)
+# actually transform the data
+X = imputer.transform(smoke_feat)
+# optional: put the stuff in a pandas DF: smoke_f_tr = pd.DataFrame(X,columns=smoke_feat.columns)
 
 
+##--------------Data Pipeline------------#
+
+# This stuff serves as an instruction list to perform a sequence of data transformations
+# in this case, we may only have two: simpleimputer and standardscaler, 
+# Let's suppose that we have a column with values ranging from 0 to 100 and another with values ranging from 0 to 15.
+# standard scaler will transform both columns to have a similar range of values.
+
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
 
+smoke_pipeline = Pipeline([
+('imputer', SimpleImputer(strategy="median")),
+('std_scaler', StandardScaler()),
+])
+
+#let's transform this data
+smoke_feat_tr = smoke_pipeline.fit_transform(smoke_feat)
+
+#THERE YOU GO. PREPARED DATA READY TO BE FED TO A ML ALGORITHM
+
+model_1 = tf.keras.Sequential([
+	#tf.keras.layers.Dense(1, activation=tf.keras.activations.linear)
+	tf.keras.layers.Dense(4,activation="tanh"),
+	tf.keras.layers.Dense(4,activation="tanh"),
+	tf.keras.layers.Dense(1,activation="sigmoid")
+])
+
+#2 Compile the model
+model_1.compile(
+	loss = tf.keras.losses.BinaryCrossentropy(),
+	optimizer=tf.keras.optimizers.Adam(learning_rate=0.02),
+	metrics=["accuracy"])
+ 
+#3.Fit the model
+history_1 = model_1.fit(smoke_feat_tr,smoke_labels,epochs=10,verbose=1)
+print(f"Evaluación de modelo 7: {model_1.evaluate(smoke_feat_tr,smoke_labels)}")
+
+history_1_df = pd.DataFrame(history_1.history)
+
+history_1_df.plot()
+plt.title("Model 7 loss curves")
+#plt.show()
+
+# Model training results:
+
+# Epoch 50/50
+# 1566/1566 [==============================] - 1s 551us/step - loss: 0.0115 - accuracy: 0.9970
+# 1566/1566 [==============================] - 1s 460us/step - loss: 0.0041 - accuracy: 0.9992
+# Evaluación de modelo 7: [0.004119544290006161, 0.9991617202758789]
+
+# Nice. 0.004 error and 0.9991 accuracy
+
+####-------------Evaluate the model on the test set--------#
+
+# divide the test set into features and labels
+smoke_test = strat_test_set.drop("Fire Alarm", axis=1)
+smoke_test_labels = strat_test_set["Fire Alarm"].copy()
+#pipeline the data
+smoke_test_tr = smoke_pipeline.fit_transform(smoke_test)
 
 
+#Use the model to predict the data
+smoke_pred = model_1.predict(smoke_test_tr)
+smoke_pred_df = pd.DataFrame(smoke_pred,columns=['Predict'])
+
+df = pd.concat( [smoke_pred_df.reset_index(drop=True), smoke_test_labels.reset_index(drop=True)], axis=1)
+
+print(df.head())
