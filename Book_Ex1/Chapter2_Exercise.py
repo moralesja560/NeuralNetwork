@@ -1,4 +1,3 @@
-from cProfile import label
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
@@ -23,10 +22,11 @@ def resource_path(relative_path):
 
 #Load the data
 	# Notice that in this particular dataset, the first column has no name. I had to name it "index" to prevent the "Unnamed:0" error
-smoke_det_df = pd.read_csv(resource_path('smoke_detection_iot.csv'),index_col=['index'])
+smoke_det_df = pd.read_csv(resource_path('smoke_detection_iot.csv'))
 # I believe we may need to remove the UTC and CNT columns, they're not even attributes , just a chronological timestamp info and a counter.
 smoke_det_df.drop('UTC', inplace=True, axis=1)
 smoke_det_df.drop('CNT', inplace=True, axis=1)
+smoke_det_df.drop('Unnamed: 0', inplace=True, axis=1)
 
 #display the data structure
 print(smoke_det_df.head())
@@ -263,7 +263,7 @@ plt.title("Model 7 loss curves")
 smoke_test = strat_test_set.drop("Fire Alarm", axis=1)
 smoke_test_labels = strat_test_set["Fire Alarm"].copy()
 #pipeline the data
-smoke_test_tr = smoke_pipeline.fit_transform(smoke_test)
+smoke_test_tr = smoke_pipeline.transform(smoke_test)
 
 
 #Use the model to predict the data
@@ -271,5 +271,6 @@ smoke_pred = model_1.predict(smoke_test_tr)
 smoke_pred_df = pd.DataFrame(smoke_pred,columns=['Predict'])
 
 df = pd.concat( [smoke_pred_df.reset_index(drop=True), smoke_test_labels.reset_index(drop=True)], axis=1)
+
 
 print(df.head())
