@@ -79,12 +79,14 @@ model_11.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(),
 					optimizer=tf.keras.optimizers.Adam(),
 					metrics=["accuracy"])
 
-non_norm_history = model_11.fit(train_data,train_labels,epochs=10,validation_data=(test_data,test_labels))
+non_norm_history = model_11.fit(train_data,train_labels,epochs=5,validation_data=(test_data,test_labels))
 
 #The Categorical Cross Entropy loss function documentation mentions that the labels must be one-hot encoded, 
 # or we can use SparseCategoricalCrossEntropy if the labels were integers.
 # please use tf.one_hot(test_labels, depth=10) to OHE the data.
 # Depth 10 is the maximum value that the resulting tensor will have.
 
+print(model_11.predict(tf.reshape(train_data[0],[-1,28,28])))
 
-print(tf.one_hot(test_labels, depth=10))
+
+#print(tf.one_hot(test_labels, depth=10))
