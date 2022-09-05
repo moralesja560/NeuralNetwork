@@ -1,0 +1,16 @@
+Architecture of a classification model
+
+		Hyperparameter		|	Binary classification  		|   Multi-class classification		| CNN
+
+Input layer shape			|	Same as # of features		|	Same as Binary 					| [batch size,height,width,channel]
+Hidden layer				|	Problem specific			|	Same as Binary					| Not Especified
+Neurons per hidden layer	|	Problem specific			|	Same as Binary					| Not Especified
+Output layer shape			|	1 (One class or the other)	|	1 per class						| 1 per class
+Hidden activation			|	Usually ReLU				|	Same as Binary					| Usually ReLU
+Output activation			|	Sigmoid						|	Softmax							| Depends if binary o multiclass
+Loss function				|	Cross Entropy				|	CategoricalCrossEntropy			| Depends
+Optimizer					|	SGD or Adam					|	Same as Binary classification	| Same
+Convolutional layer																				| Keras.Layers.ConvxD
+Pooling Layer																					| AvgPool2D or MaxPool2D
+
+

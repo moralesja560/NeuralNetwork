@@ -132,3 +132,5 @@ dmypy.json
 images/testimg
 resources/dataset_dogs_vs_cats
 resources/dataset_dogs_vs_cats2
+resources/dataset_pizza_steak
+resources/dataset_pizza_steak2
