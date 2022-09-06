@@ -11,7 +11,7 @@ def resource_path(relative_path):
 
 
 
-new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel2"))
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel3"))
 
 # Check its architecture
 #print(new_model.summary())
@@ -39,7 +39,7 @@ final_data = new_model.predict(tf.expand_dims(ready_img,axis=0))
 print(final_data)
 
 if final_data.round() == 0:
-	print("It's a steak")
-else:
 	print("It's a pizza")
+else:
+	print("It's a steak")
 
