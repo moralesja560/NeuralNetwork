@@ -52,7 +52,7 @@ for file in listdir(src_directory):
 	dst_dir = 'train\\'
 	if random() < val_ratio:
 		dst_dir = 'test\\'
-	if file.startswith('pizza'):
+	if file.startswith('pizza'):  #change the pizza name 
 		dst = processed_folder + dst_dir + 'pizza\\' + file
 	# commented to avoid duplicating when running the code
 		copyfile(src,dst)
