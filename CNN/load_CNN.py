@@ -1,9 +1,17 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import tensorflow as tf
 import numpy as np
+import sys,os
 
-new_model = tf.keras.models.load_model(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\CNN_savedmodel')
+
+#This function sets the absolute path for the app to access its resources
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
+
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel2"))
 
 # Check its architecture
 #print(new_model.summary())
@@ -24,7 +32,7 @@ def load_and_prep_image(filename,img_shape=224):
 	img = img/255
 	return img
 
-ready_img = load_and_prep_image(r"C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_pizza_steak\image_custom1.jpg")
+ready_img = load_and_prep_image(r"C:\Users\SKU 80093\Documents\Python_Scripts\NeuralNetwork\resources\dataset_pizza_steak\steak.jpg")
 
 final_data = new_model.predict(tf.expand_dims(ready_img,axis=0))
 

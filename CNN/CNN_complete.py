@@ -20,15 +20,28 @@ from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Dense,Flatten, Conv2D,MaxPool2D,Activation
 from tensorflow.keras import Sequential
+import os, sys
+
+#This function sets the absolute path for the app to access its resources
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
+
 
 tf.random.set_seed(42)
 #get all the pixel values between 0 - 1
 train_datagen = ImageDataGenerator(rescale=1./255)
 valid_datagen = ImageDataGenerator(rescale=1./255)
 
-#set the directory path
-train_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
-test_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
+#set the directory path WORK COMPUTER
+#train_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
+#test_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
+
+train_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
+test_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
+
 
 # import data from directories and turn it into batches
 train_data = train_datagen.flow_from_directory(
@@ -77,10 +90,11 @@ model_base.compile(
 )
 
 model_base_df = model_base.fit(train_data,
-                      epochs=8,
+                      epochs=20,
                       steps_per_epoch=len(train_data), # this is amazing. Train data is an array that already have the features and labels joined.
                       validation_data=valid_data, # 
                       validation_steps=len(valid_data),
                       verbose=1)
 
-model_base.save(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\CNN_savedmodel')
+#model_base.save(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\CNN_savedmodel')
+#model_base.save(resource_path(r"CNN_savedmodel2"))
