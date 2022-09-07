@@ -11,7 +11,7 @@ def resource_path(relative_path):
 
 
 
-new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel4"))
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel5"))
 
 # Check its architecture
 #print(new_model.summary())

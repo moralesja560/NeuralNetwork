@@ -479,10 +479,14 @@ model_base5 = tf.keras.models.Sequential([
     # Third Max Pool Layer
     tf.keras.layers.MaxPool2D(),
     # 4th CNN
-	#tf.keras.layers.Conv2D(10,3,activation="relu"),
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
     # 4th Max Pool Layer
-    #tf.keras.layers.MaxPool2D(),
-		  
+    tf.keras.layers.MaxPool2D(),
+	# 5th CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 5th Max Pool Layer
+    tf.keras.layers.MaxPool2D(),	  
+
     # Flatten
 	tf.keras.layers.Flatten(),
 	# output layer
@@ -496,25 +500,28 @@ model_base5.compile(
 )
 
 #2.5 Create a learning rate callback
-lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/10))
+#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/10))
 
 model_base5_data = model_base5.fit(train_data_aug,
                       epochs=15,
                       steps_per_epoch=len(train_data_aug), 
                       validation_data=valid_data, # 
                       validation_steps=len(valid_data),
-                      callbacks=[lr_scheduler],
+                      #callbacks=[lr_scheduler],
                       verbose=1)
 
 plot_loss_curves(model_base5_data)
-model_base5_data.save(resource_path(r"CNN_savedmodel5"))
+model_base5.save(resource_path(r"CNN_savedmodel5"))
 
 """
 Over model4:
 
 * original: 87%
 * rotation_range from 0.5 to 0.2: 8418
-    * learning rate callback (epoch/5): terrible results
-    * epoch/10: 
+    * enabled the last layers: 84.99 amazing.
+    * extra layers: 
+
 
 """
+
+#######-------ooof: Model5 came out very close to model4------------------#
