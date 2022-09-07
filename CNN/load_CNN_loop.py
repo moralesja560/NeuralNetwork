@@ -11,7 +11,7 @@ def resource_path(relative_path):
 
 
 
-new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel3"))
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel4"))
 
 # Check its architecture
 #print(new_model.summary())
@@ -51,5 +51,5 @@ for count, filename in enumerate(os.listdir(folder)):
 
 
 pd_log = pd.DataFrame(pd_dict)
-pd_log.to_csv(r'D:\Downloads\archive\pizza_not_pizza\results3.csv',index=False)
+pd_log.to_csv(r'D:\Downloads\archive\pizza_not_pizza\results4.csv',index=False)
 

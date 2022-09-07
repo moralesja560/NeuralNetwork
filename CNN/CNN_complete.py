@@ -25,7 +25,7 @@ import os, sys
 import matplotlib.pyplot as plt
 import pandas as pd
 
-
+tf.random.set_seed(42)
 #This function sets the absolute path for the app to access its resources
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -267,11 +267,11 @@ train_datagen_aug = ImageDataGenerator(
     rescale=1./255,
     rotation_range=0.5,
     shear_range=0.5,
-    zoom_range=0.5,
+    zoom_range=0.2,
     width_shift_range=0.4,
     height_shift_range=0.4,
     horizontal_flip=True,
-    vertical_flip=True,
+    #vertical_flip=True,
     )
 valid_datagen = ImageDataGenerator(rescale=1./255)
 
@@ -347,16 +347,174 @@ model_base3.compile(
     metrics=['accuracy']
 )
 
-model_base3_data = model_base3.fit(train_data_aug,
-                      epochs=10,
-                      steps_per_epoch=len(train_data_aug), 
-                      validation_data=valid_data, # 
-                      validation_steps=len(valid_data),
-                      verbose=1)
+#model_base3_data = model_base3.fit(train_data_aug,
+#                      epochs=10,
+#                      steps_per_epoch=len(train_data_aug), 
+#                      validation_data=valid_data, # 
+#                      validation_steps=len(valid_data),
+#                      verbose=1)
 
 
 
 #------- Evaluate the model-----------#
-plot_loss_curves(model_base3_data)
-model_base3.save(resource_path(r"CNN_savedmodel3"))
+#plot_loss_curves(model_base3_data)
+#model_base3.save(resource_path(r"CNN_savedmodel3"))
 
+#------------Time to experiment--------------------#
+
+model_base4 = tf.keras.models.Sequential([
+	# First CNN layer.
+	    # add the input shape to the first CNN layer only
+	Conv2D(
+		filters=10, # filter is the number of sliding windows going across an input. higher number means more complex alarm.
+		kernel_size=3, # the size of the sliding window going across and input 
+		strides=(1,1), # the size of the step the sliding window takes.
+		padding= 'valid', # if "same", out shape is same as input shape, otherwise image gets compressed
+		activation = "relu", 
+		input_shape =(224,224,3)),
+
+	# First Max Pool Layer: Takes the max value of a group of pixels. Condenses the input into a smaller output.
+    # From a grid of 4 pixels, takes the pixel with the max value.
+	tf.keras.layers.MaxPool2D(pool_size=2),
+    # Second CNN Layer
+    tf.keras.layers.Conv2D(10,3,activation="relu"),
+	# Second Max Pool Layer
+	tf.keras.layers.MaxPool2D(),
+    # third CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # Third Max Pool Layer
+    tf.keras.layers.MaxPool2D(),
+    # 4th CNN
+	#tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 4th Max Pool Layer
+    #tf.keras.layers.MaxPool2D(),
+		  
+    # Flatten
+	tf.keras.layers.Flatten(),
+	# output layer
+	tf.keras.layers.Dense(1, activation='sigmoid')
+	])
+
+model_base4.compile(
+    loss="binary_crossentropy",
+    optimizer=tf.keras.optimizers.Adam(),
+    metrics=['accuracy']
+)
+
+#model_base4_data = model_base4.fit(train_data_aug,
+#                      epochs=15,
+#                      steps_per_epoch=len(train_data_aug), 
+#                      validation_data=valid_data, # 
+#                      validation_steps=len(valid_data),
+#                      verbose=1)
+
+#plot_loss_curves(model_base4_data)
+#model_base4.save(resource_path(r"CNN_savedmodel4"))
+
+"""
+Over model3:
+
+* original (10 filters, 3 kernel, 4layers each): 0.7453
+* reduced 1 layer each: 0.8552
+    * filters to 16: 0.8204
+    * tanh 0.71
+    * kernel 1: 0.8126
+    * kernel 5: 8204
+    * reduced 1 layer again: 0.7775
+    * this but pool size 2 and deleted vertical flip: .8338
+        *reduced zoom range from 0.5 to 0.2: 0.7775
+            *15 epochs?: 0.86
+* reduce data augmentation
+
+
+"""
+
+#----- BASELINE IS MODEL 4 WITH 87% OF CORRECT ANSWERS. CAN MODEL 5 BEAT THAT?--------------------#
+
+#get all the pixel values between 0 - 1
+train_datagen_aug_M5 = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=0.2,
+    shear_range=0.5,
+    zoom_range=0.2,
+    width_shift_range=0.4,
+    height_shift_range=0.4,
+    horizontal_flip=True,
+    #vertical_flip=True,
+    )
+
+valid_datagen = ImageDataGenerator(rescale=1./255)
+
+
+
+# import data from directories and turn it into batches
+train_data_aug = train_datagen_aug_M5.flow_from_directory(
+    directory=train_dir,
+    batch_size=32,
+    target_size=(224,224),
+    class_mode = 'binary',
+    shuffle=True
+)
+
+model_base5 = tf.keras.models.Sequential([
+	# First CNN layer.
+	    # add the input shape to the first CNN layer only
+	Conv2D(
+		filters=10, # filter is the number of sliding windows going across an input. higher number means more complex alarm.
+		kernel_size=3, # the size of the sliding window going across and input 
+		strides=(1,1), # the size of the step the sliding window takes.
+		padding= 'valid', # if "same", out shape is same as input shape, otherwise image gets compressed
+		activation = "relu", 
+		input_shape =(224,224,3)),
+
+	# First Max Pool Layer: Takes the max value of a group of pixels. Condenses the input into a smaller output.
+    # From a grid of 4 pixels, takes the pixel with the max value.
+	tf.keras.layers.MaxPool2D(pool_size=2),
+    # Second CNN Layer
+    tf.keras.layers.Conv2D(10,3,activation="relu"),
+	# Second Max Pool Layer
+	tf.keras.layers.MaxPool2D(),
+    # third CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # Third Max Pool Layer
+    tf.keras.layers.MaxPool2D(),
+    # 4th CNN
+	#tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 4th Max Pool Layer
+    #tf.keras.layers.MaxPool2D(),
+		  
+    # Flatten
+	tf.keras.layers.Flatten(),
+	# output layer
+	tf.keras.layers.Dense(1, activation='sigmoid')
+	])
+
+model_base5.compile(
+    loss="binary_crossentropy",
+    optimizer=tf.keras.optimizers.Adam(),
+    metrics=['accuracy']
+)
+
+#2.5 Create a learning rate callback
+lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/10))
+
+model_base5_data = model_base5.fit(train_data_aug,
+                      epochs=15,
+                      steps_per_epoch=len(train_data_aug), 
+                      validation_data=valid_data, # 
+                      validation_steps=len(valid_data),
+                      callbacks=[lr_scheduler],
+                      verbose=1)
+
+plot_loss_curves(model_base5_data)
+model_base5_data.save(resource_path(r"CNN_savedmodel5"))
+
+"""
+Over model4:
+
+* original: 87%
+* rotation_range from 0.5 to 0.2: 8418
+    * learning rate callback (epoch/5): terrible results
+    * epoch/10: 
+
+"""
