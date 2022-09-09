@@ -10,11 +10,10 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-
-new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel5"))
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel4"))
 
 # Check its architecture
-#print(new_model.summary())
+print(new_model.summary())
 
 
 #custom function to help process the data
@@ -32,8 +31,9 @@ def load_and_prep_image(filename,img_shape=224):
 	img = img/255
 	return img
 
-ready_img = load_and_prep_image(r"C:\Users\SKU 80093\Documents\Python_Scripts\NeuralNetwork\resources\dataset_pizza_steak\pizza_real.jpg")
+#ready_img = load_and_prep_image(r"C:\Users\SKU 80093\Documents\Python_Scripts\NeuralNetwork\resources\dataset_pizza_steak\pizza_real.jpg")
 
+ready_img = load_and_prep_image(r"C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_pizza_steak\pizza.jpg")
 final_data = new_model.predict(tf.expand_dims(ready_img,axis=0))
 
 print(final_data)

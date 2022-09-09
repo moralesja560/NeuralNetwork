@@ -63,11 +63,11 @@ train_datagen = ImageDataGenerator(rescale=1./255)
 valid_datagen = ImageDataGenerator(rescale=1./255)
 
 #set the directory path WORK COMPUTER
-#train_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
-#test_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
+train_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
+test_dir = r'C:\\Users\\moralesja.group\\Documents\\SC_Repo\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
 
-train_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
-test_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
+#train_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\train'
+#test_dir = r'C:\\Users\\SKU 80093\\Documents\\Python_Scripts\\NeuralNetwork\\resources\\dataset_pizza_steak\\pizza_steak2\\test'
 
 
 # import data from directories and turn it into batches
@@ -502,16 +502,16 @@ model_base5.compile(
 #2.5 Create a learning rate callback
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/10))
 
-model_base5_data = model_base5.fit(train_data_aug,
-                      epochs=15,
-                      steps_per_epoch=len(train_data_aug), 
-                      validation_data=valid_data, # 
-                      validation_steps=len(valid_data),
-                      #callbacks=[lr_scheduler],
-                      verbose=1)
+#model_base5_data = model_base5.fit(train_data_aug,
+#                      epochs=15,
+#                      steps_per_epoch=len(train_data_aug), 
+#                      validation_data=valid_data, # 
+#                      validation_steps=len(valid_data),
+#                      #callbacks=[lr_scheduler],
+#                      verbose=1)
 
-plot_loss_curves(model_base5_data)
-model_base5.save(resource_path(r"CNN_savedmodel5"))
+#plot_loss_curves(model_base5_data)
+#model_base5.save(resource_path(r"CNN_savedmodel5"))
 
 """
 Over model4:
@@ -525,3 +525,99 @@ Over model4:
 """
 
 #######-------ooof: Model5 came out very close to model4------------------#
+
+
+##---------------------Can Model6 beat Model5 and its 87.16% out of 981 images----------------------#
+
+#get all the pixel values between 0 - 1
+train_datagen_aug_M6 = ImageDataGenerator(
+    rescale=1./255,
+    rotation_range=0.2,
+    shear_range=0.2,
+    zoom_range=0.2,
+    width_shift_range=0.4,
+    height_shift_range=0.4,
+    horizontal_flip=True,
+    #vertical_flip=True,
+    )
+
+valid_datagen = ImageDataGenerator(rescale=1./255)
+
+
+
+# import data from directories and turn it into batches
+train_data_aug = train_datagen_aug_M6.flow_from_directory(
+    directory=train_dir,
+    batch_size=32,
+    target_size=(224,224),
+    class_mode = 'binary',
+    shuffle=True
+)
+
+model_base6 = tf.keras.models.Sequential([
+	# First CNN layer.
+	    # add the input shape to the first CNN layer only
+	Conv2D(
+		filters=10, # filter is the number of sliding windows going across an input. higher number means more complex alarm.
+		kernel_size=3, # the size of the sliding window going across and input 
+		strides=(1,1), # the size of the step the sliding window takes.
+		padding= 'same', # if "same", out shape is same as input shape, otherwise image gets compressed
+		activation = "relu", 
+		input_shape =(224,224,3)),
+
+	# First Max Pool Layer: Takes the max value of a group of pixels. Condenses the input into a smaller output.
+    # From a grid of 4 pixels, takes the pixel with the max value.
+	tf.keras.layers.MaxPool2D(pool_size=2),
+    # Second CNN Layer
+    tf.keras.layers.Conv2D(10,3,activation="relu"),
+	# Second Max Pool Layer
+	tf.keras.layers.MaxPool2D(),
+    # third CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # Third Max Pool Layer
+    tf.keras.layers.MaxPool2D(),
+    # 4th CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 4th Max Pool Layer
+    tf.keras.layers.MaxPool2D(),
+	# 5th CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 5th Max Pool Layer
+    tf.keras.layers.MaxPool2D(),	  
+	# 6th CNN
+	tf.keras.layers.Conv2D(10,3,activation="relu"),
+    # 6th Max Pool Layer
+    tf.keras.layers.MaxPool2D(),	
+
+
+    # Flatten
+	tf.keras.layers.Flatten(),
+	# output layer
+	tf.keras.layers.Dense(1, activation='sigmoid')
+	])
+
+model_base6.compile(
+    loss="binary_crossentropy",
+    optimizer=tf.keras.optimizers.Adam(),
+    metrics=['accuracy']
+)
+
+#2.5 Create a learning rate callback
+#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/10))
+
+model_base6_data = model_base6.fit(train_data_aug,
+                      epochs=30,
+                      steps_per_epoch=len(train_data_aug), 
+                      validation_data=valid_data, # 
+                      validation_steps=len(valid_data),
+                      #callbacks=[lr_scheduler],
+                      verbose=1)
+
+plot_loss_curves(model_base6_data)
+model_base6.save(resource_path(r"CNN_savedmodel6"))
+
+"""
+over model 5:
+	* reduced shear from 0.5 to 0.2 + 30 epochs + padding same  = 0.8613. just 0.1% improvement.
+		* how about another layer? = Amazing 92.25% We end this train of tests.
+"""

@@ -11,7 +11,7 @@ def resource_path(relative_path):
 
 
 
-new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel5"))
+new_model = tf.keras.models.load_model(resource_path(r"CNN_savedmodel6"))
 
 # Check its architecture
 #print(new_model.summary())
@@ -33,7 +33,8 @@ def load_and_prep_image(filename,img_shape=224):
 	return img
 
 pd_dict = {'result' : [], 'filepath' : []}
-folder = r'D:\Downloads\archive\pizza_not_pizza\pizza'
+#folder = r'D:\Downloads\archive\pizza_not_pizza\pizza'
+folder = r'C:\Users\moralesja.group\Downloads\pizza_predict\pizza_not_pizza\pizza'
 
 for count, filename in enumerate(os.listdir(folder)):
 	
@@ -51,5 +52,6 @@ for count, filename in enumerate(os.listdir(folder)):
 
 
 pd_log = pd.DataFrame(pd_dict)
-pd_log.to_csv(r'D:\Downloads\archive\pizza_not_pizza\results5.csv',index=False)
+#pd_log.to_csv(r'D:\Downloads\archive\pizza_not_pizza\results5.csv',index=False)
+pd_log.to_csv(r'C:\Users\moralesja.group\Downloads\pizza_predict\pizza_not_pizza\results6.csv',index=False)
 
