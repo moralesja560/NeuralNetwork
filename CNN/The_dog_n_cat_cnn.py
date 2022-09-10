@@ -7,6 +7,8 @@ from tensorflow.keras import Sequential
 import os, sys
 import matplotlib.pyplot as plt
 import pandas as pd
+import math
+from datetime import datetime
 
 tf.random.set_seed(42)
 #This function sets the absolute path for the app to access its resources
@@ -30,12 +32,13 @@ def plot_loss_curves(history):
   plt.title("loss")
   plt.xlabel("epochs")
   plt.legend()
-
+  
   plt.plot(epochs,train_acc,label="training accuracy")
   plt.plot(epochs,val_acc,label="val accuracy")
   plt.title("Accuracy")
   plt.xlabel("epochs")
   plt.legend()
+  plt.ylim([0,1])
   plt.show()
 
 tf.random.set_seed(42)
@@ -46,10 +49,10 @@ test_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\
 
 ##-----------------------The baseline model--------------------------#
 
-def baseline_model(train_dir,test_dir,train_datagen,valid_datagen):
+def baseline_model(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	train_data = train_datagen.flow_from_directory(
     	directory=train_dir,
-    	batch_size=32,
+    	batch_size=batch_size,
     	target_size=(224,224),
     	class_mode = 'binary',
     	seed=42
@@ -57,12 +60,13 @@ def baseline_model(train_dir,test_dir,train_datagen,valid_datagen):
 
 	valid_data = valid_datagen.flow_from_directory(
 	    directory=test_dir,
-	    batch_size=32,
+	    batch_size=batch_size,
 	    target_size=(224,224),
 	    class_mode = 'binary',
 	    seed=42
 	)
-	
+	learning_rate_calc = (0.1 *(batch_size)/256)
+
 	model_base = tf.keras.models.Sequential([
 	Conv2D(filters=10, kernel_size=3, strides=(1,1),padding= 'valid', activation = "relu", input_shape =(224,224,3)),
 	tf.keras.layers.Conv2D(20,3,activation="relu"),
@@ -70,18 +74,21 @@ def baseline_model(train_dir,test_dir,train_datagen,valid_datagen):
 	tf.keras.layers.Flatten(),
 	tf.keras.layers.Dense(1, activation='sigmoid')
 	])
+
 	model_base.compile(loss="binary_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
 
 	#callbacks
-	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel"), monitor='val_accuracy',save_best_only= True,save_weights_only=False,verbose=1)
+	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel"), monitor='accuracy',save_best_only= True,save_weights_only=False,verbose=1)
+	early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=2,verbose=1,mode='max')
+	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
 
-	model_base.fit(train_data,epochs=5,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[cp_callback],verbose=1)
-	return model_base
+	data_model = model_base.fit(train_data,epochs=epochs,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[early_cb],verbose=1)
+	return data_model
 
-def model2(train_dir,test_dir,train_datagen,valid_datagen):
+def model_2(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	train_data = train_datagen.flow_from_directory(
     	directory=train_dir,
-    	batch_size=32,
+    	batch_size=batch_size,
     	target_size=(224,224),
     	class_mode = 'binary',
     	seed=42
@@ -89,30 +96,107 @@ def model2(train_dir,test_dir,train_datagen,valid_datagen):
 
 	valid_data = valid_datagen.flow_from_directory(
 	    directory=test_dir,
-	    batch_size=32,
+	    batch_size=batch_size,
 	    target_size=(224,224),
 	    class_mode = 'binary',
 	    seed=42
 	)
-	
+	learning_rate_calc = (0.1 *(batch_size)/256)
+
 	model_base = tf.keras.models.Sequential([
-	tf.keras.layers.Conv2D(filters=32, kernel_size=3, strides=(1,1),padding= 'same', activation = "relu", input_shape =(224,224,3)),
-	tf.keras.layers.Conv2D(64,3,activation="relu"),
-	tf.keras.layers.Conv2D(128,3,activation="relu"),
-	tf.keras.layers.MaxPool2D(pool_size=2),
+
+	tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(224, 224, 3)),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	tf.keras.layers.Dropout(0.2),
+	tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	tf.keras.layers.Dropout(0.2),
+	tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	tf.keras.layers.Dropout(0.2),
 	tf.keras.layers.Flatten(),
+	tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
+	tf.keras.layers.Dropout(0.5),
 	tf.keras.layers.Dense(1, activation='sigmoid')
 	])
+
 	model_base.compile(loss="binary_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
 
 	#callbacks
-	#cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel"), monitor='val_accuracy',save_best_only= True,save_weights_only=False,verbose=1)
+	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
+	#early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=3,verbose=1,mode='max')
+	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
 
-	model_base.fit(train_data,epochs=5,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),verbose=1)
-	return model_base
+	data_model = model_base.fit(train_data,epochs=epochs,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[cp_callback],verbose=1)
+	return data_model
 
+def model_3(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
+	train_data = train_datagen.flow_from_directory(
+    	directory=train_dir,
+    	batch_size=batch_size,
+    	target_size=(256,256),
+    	class_mode = 'binary',
+		shuffle=True,
+    	seed=42
+	)
 
+	valid_data = valid_datagen.flow_from_directory(
+	    directory=test_dir,
+	    batch_size=batch_size,
+	    target_size=(256,256),
+	    class_mode = 'binary',
+	    seed=42
+	)
+	learning_rate_calc = (0.1 *(batch_size)/256)
 
+	model_base = tf.keras.models.Sequential([
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same', input_shape=(256,256, 3)),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	tf.keras.layers.Dropout(0.2),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	#tf.keras.layers.Dropout(0.2),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	#tf.keras.layers.Dropout(0.2),
+	
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+	#tf.keras.layers.Dropout(0.2),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2, 2)),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+
+	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+
+	tf.keras.layers.Flatten(),
+	tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
+	tf.keras.layers.Dropout(0.5),
+	tf.keras.layers.Dense(1, activation='sigmoid')
+	])
+
+	model_base.compile(loss="binary_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
+
+	#callbacks
+	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel_alt"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
+	#early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=3,verbose=1,mode='max')
+	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
+
+	data_model = model_base.fit(train_data,epochs=epochs,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[cp_callback],verbose=1)
+	return data_model
 
 def data_transformation(zoom,shear,flip_v,flip_h,rotation,w_shift,h_shift):
 	train_datagen = ImageDataGenerator(
@@ -131,9 +215,32 @@ def data_transformation(zoom,shear,flip_v,flip_h,rotation,w_shift,h_shift):
 
 
 if __name__ == '__main__':
-	train_datagen_f,valid_datagen_f = data_transformation(zoom=0.0,shear=0.0,flip_h=False,flip_v=True,rotation=0.0,w_shift=0.0,h_shift=0.0)
-	#baseline_model(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f)
-	model2(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f)
+	print(datetime.now())
+	train_datagen_f,valid_datagen_f = data_transformation(zoom=0.1,shear=0.1,flip_h=False,flip_v=False,rotation=0.1,w_shift=0.1,h_shift=0.1)
+	#model_tr_data = baseline_model(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=30,batch_size=16)
+	#plot_loss_curves(model_tr_data)
+	#model_tr_data2 = model_2(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
+	#plot_loss_curves(model_tr_data2)
+	model_tr_data3 = model_3(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
+	plot_loss_curves(model_tr_data3)
 
 
+"""
+Flow chart
+
+Model is overfitting? (training_accuracy>99 & val_accuracy<90)
+	* if yes: use data augmentation or another technique to make the data harder to figure it out.
+	* if not: improve model by altering hyperparameters or select more epochs.
+
+baseline:
+Epoch 16/30
+1245/1245 [==============================] - 178s 143ms/step - loss: 0.4271 - accuracy: 0.8033 - val_loss: 0.4159 - val_accuracy: 0.8217
+
+model_2:
+Epoch 40/40
+312/312 [==============================] - ETA: 0s - loss: 0.2802 - accuracy: 0.8880
+
+A method recommended by Geoff Hinton is to add layers until you start to overfit your training set. Then you add dropout or another regularization method.
+
+"""
 	

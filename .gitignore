@@ -134,3 +134,6 @@ resources/dataset_dogs_vs_cats
 resources/dataset_dogs_vs_cats2
 resources/dataset_pizza_steak
 resources/dataset_pizza_steak2
+CNN/dogcatmodel
+CNN/dogcatmodel_alt
+CNN/dogcatmodel/keras_metadata.pb

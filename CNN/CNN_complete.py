@@ -108,6 +108,12 @@ Strides: The number of steps a filters takes across an image at a time.
     Typical values: 1 or 2
     The sliding window moves 1 pixel during the image "scanning"
 
+Learning rate. he recommended to divide the gradients by mini batch size. 
+		Thus, you should not always change the learning rates (LR), if you change the mini batch size. 
+		For obtaining an appropriate LR, utilizing the validation set is an effective way.
+		Usually, a typical value of LR in the beginning of your training is 0.1. 
+		In practice, if you see that you stopped making progress on the validation set, 
+		divide the LR by 2 (or by 5), and keep going, which might give you a surprise.
 """
 
 
