@@ -44,9 +44,11 @@ def plot_loss_curves(history):
 tf.random.set_seed(42)
 
 #set the directory path WORK COMPUTER
-train_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\train'
-test_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\test'
+#train_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\train'
+#test_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\test'
 
+train_dir = r'D:\Downloads\dataset_dogs_vs_cats2\train'
+test_dir = r'D:\Downloads\dataset_dogs_vs_cats2\test'
 ##-----------------------The baseline model--------------------------#
 
 def baseline_model(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
@@ -203,16 +205,16 @@ def model_4(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	train_data = train_datagen.flow_from_directory(
     	directory=train_dir,
     	batch_size=batch_size,
-    	target_size=(224,244),
+    	target_size=(224,224),
     	class_mode = 'binary',
-		shuffle=True,
+		shuffle=False,
     	seed=42
 	)
 
 	valid_data = valid_datagen.flow_from_directory(
 	    directory=test_dir,
 	    batch_size=batch_size,
-	    target_size=(244,244),
+	    target_size=(224,224),
 	    class_mode = 'binary',
 	    seed=42
 	)
@@ -235,17 +237,17 @@ def model_4(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
       	tf.keras.layers.Dense(512,activation='relu'),
       	tf.keras.layers.Dropout(0.5),
       	tf.keras.layers.Dense(128,activation='relu'),
-		tf.keras.layers.Dense(2,activation='sigmoid')  
+		tf.keras.layers.Dense(1,activation='sigmoid')  
 	])
 
-	model.compile(loss="categorical_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
+	model.compile(loss="binary_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
 
 	#callbacks
 	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel_alt_4"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
 	#early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=3,verbose=1,mode='max')
 	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
 
-	data_model = model.fit(train_data,epochs=epochs,steps_per_epoch=100,validation_data=valid_data,validation_steps=20,callbacks=[cp_callback],verbose=1)
+	data_model = model.fit(train_data,epochs=epochs,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[cp_callback],verbose=1)
 	return data_model
 
 
