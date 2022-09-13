@@ -207,6 +207,57 @@ def model_3(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	data_model = model_base.fit(train_data,epochs=epochs,steps_per_epoch=len(train_data),validation_data=valid_data,validation_steps=len(valid_data),callbacks=[cp_callback],verbose=1)
 	return data_model
 
+
+def model_4(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
+	train_data = train_datagen.flow_from_directory(
+    	directory=train_dir,
+    	batch_size=batch_size,
+    	target_size=(224,244),
+    	class_mode = 'binary',
+		shuffle=True,
+    	seed=42
+	)
+
+	valid_data = valid_datagen.flow_from_directory(
+	    directory=test_dir,
+	    batch_size=batch_size,
+	    target_size=(244,244),
+	    class_mode = 'binary',
+	    seed=42
+	)
+
+	model = tf.keras.models.Sequential([ 
+		tf.keras.layers.Conv2D(32,(3,3),activation='relu',input_shape=(224,224,3)),
+		tf.keras.layers.MaxPooling2D(2,2),
+    	tf.keras.layers.BatchNormalization(),
+      	tf.keras.layers.Dropout(0.2),
+
+      	tf.keras.layers.Conv2D(64,(3,3),activation='relu'),
+      	tf.keras.layers.MaxPooling2D(2,2),
+      	tf.keras.layers.Dropout(0.2),
+
+      	tf.keras.layers.Conv2D(128,(3,3),activation='relu'),
+      	tf.keras.layers.MaxPooling2D(2,2),
+      	tf.keras.layers.Dropout(0.2),
+
+      	tf.keras.layers.Flatten(),
+      	tf.keras.layers.Dense(512,activation='relu'),
+      	tf.keras.layers.Dropout(0.5),
+      	tf.keras.layers.Dense(128,activation='relu'),
+		tf.keras.layers.Dense(2,activation='sigmoid')  
+	])
+
+	model.compile(loss="categorical_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
+
+	#callbacks
+	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel_alt_4"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
+	#early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=3,verbose=1,mode='max')
+	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
+
+	data_model = model.fit(train_data,epochs=epochs,steps_per_epoch=100,validation_data=valid_data,validation_steps=20,callbacks=[cp_callback],verbose=1)
+	return data_model
+
+
 def data_transformation(zoom,shear,flip_v,flip_h,rotation,w_shift,h_shift):
 	train_datagen = ImageDataGenerator(
     	rescale=1./255,
@@ -230,8 +281,11 @@ if __name__ == '__main__':
 	#plot_loss_curves(model_tr_data)
 	#model_tr_data2 = model_2(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
 	#plot_loss_curves(model_tr_data2)
-	model_tr_data3 = model_3(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
-	plot_loss_curves(model_tr_data3)
+	#model_tr_data3 = model_3(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
+	#plot_loss_curves(model_tr_data3)
+	train_datagen_g,valid_datagen_g = data_transformation(zoom=0.2,shear=0.2,flip_h=True,flip_v=False,rotation=0.4,w_shift=0.2,h_shift=0.2)
+	model_tr_data4 = model_4(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_g,valid_datagen=valid_datagen_g,epochs=40,batch_size=128)
+
 
 
 """
