@@ -1,6 +1,6 @@
 import os
 from statistics import mean
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
+#os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 import pandas as pd
 import matplotlib.pyplot as plt
 import tensorflow as tf
@@ -78,8 +78,7 @@ model_8.compile(
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 
 #3.Fit the model
-history_8 = model_8.fit(X_train_scaled,y_train,epochs=40, verbose=1)
-
+history_8 = model_8.fit(X_train_scaled,y_train,epochs=10,steps_per_epoch=len(X_train_scaled),validation_data=(X_test,y_test),validation_steps=len(X_test), verbose=1)
 
 
 
