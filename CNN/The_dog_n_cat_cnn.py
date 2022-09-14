@@ -44,11 +44,11 @@ def plot_loss_curves(history):
 tf.random.set_seed(42)
 
 #set the directory path WORK COMPUTER
-#train_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\train'
-#test_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\test'
+train_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\train'
+test_dir = r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\resources\dataset_dogs_vs_cats2\test'
 
-train_dir = r'D:\Downloads\dataset_dogs_vs_cats2\train'
-test_dir = r'D:\Downloads\dataset_dogs_vs_cats2\test'
+#train_dir = r'D:\Downloads\dataset_dogs_vs_cats2\train'
+#test_dir = r'D:\Downloads\dataset_dogs_vs_cats2\test'
 ##-----------------------The baseline model--------------------------#
 
 def baseline_model(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
@@ -125,7 +125,7 @@ def model_2(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	model_base.compile(loss="binary_crossentropy",optimizer=tf.keras.optimizers.Adam(),metrics=['accuracy'])
 
 	#callbacks
-	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
+	cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"dogcatmodel_2"), monitor='val_accuracy',save_best_only=True,save_weights_only=False,verbose=1)
 	#early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_accuracy',min_delta=0.01,patience=3,verbose=1,mode='max')
 	#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 0.001 * 0.5 * ( 1 + math.cos( epoch * (math.pi))/(594)))
 
@@ -173,29 +173,30 @@ def model_3(train_dir,test_dir,train_datagen,valid_datagen,epochs,batch_size):
 	tf.keras.layers.MaxPooling2D((2, 2)),
 
 	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 
 	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 	
 	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 
 	tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 	
 	tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 
 	tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 
 	tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_uniform', padding='same'),
-	tf.keras.layers.MaxPooling2D((2,2), strides=(1,1), padding='same'),
+	tf.keras.layers.MaxPooling2D((2,2), padding='same'),
 
 	tf.keras.layers.Flatten(),
-	tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
+	#tf.keras.layers.Dense(512, activation='relu', kernel_initializer='he_uniform'),
 	#tf.keras.layers.Dropout(0.5),
+	#tf.keras.layers.Dense(128, activation='relu', kernel_initializer='he_uniform'),
 	tf.keras.layers.Dense(1, activation='sigmoid')
 	])
 
@@ -281,12 +282,12 @@ if __name__ == '__main__':
 	train_datagen_f,valid_datagen_f = data_transformation(zoom=0.1,shear=0.1,flip_h=False,flip_v=False,rotation=0.1,w_shift=0.1,h_shift=0.1)
 	#model_tr_data = baseline_model(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=30,batch_size=16)
 	#plot_loss_curves(model_tr_data)
-	#model_tr_data2 = model_2(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
-	#plot_loss_curves(model_tr_data2)
+	model_tr_data2 = model_2(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=50,batch_size=64)
+	plot_loss_curves(model_tr_data2)
 	#model_tr_data3 = model_3(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_f,valid_datagen=valid_datagen_f,epochs=40,batch_size=64)
 	#plot_loss_curves(model_tr_data3)
-	train_datagen_g,valid_datagen_g = data_transformation(zoom=0.2,shear=0.2,flip_h=True,flip_v=False,rotation=0.4,w_shift=0.2,h_shift=0.2)
-	model_tr_data4 = model_4(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_g,valid_datagen=valid_datagen_g,epochs=40,batch_size=128)
+	#train_datagen_g,valid_datagen_g = data_transformation(zoom=0.2,shear=0.2,flip_h=True,flip_v=False,rotation=0.4,w_shift=0.2,h_shift=0.2)
+	#model_tr_data4 = model_4(train_dir=train_dir,test_dir=test_dir,train_datagen=train_datagen_g,valid_datagen=valid_datagen_g,epochs=40,batch_size=128)
 
 
 

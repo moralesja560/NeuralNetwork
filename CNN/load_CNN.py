@@ -10,7 +10,7 @@ def resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-new_model = tf.keras.models.load_model(resource_path(r"dogcatmodel"))
+new_model = tf.keras.models.load_model(resource_path(r"dogcatmodel_2"))
 
 # Check its architecture
 #print(new_model.summary())
@@ -33,7 +33,7 @@ def load_and_prep_image(filename,img_shape=224):
 
 #ready_img = load_and_prep_image(r"C:\Users\SKU 80093\Documents\Python_Scripts\NeuralNetwork\resources\dataset_pizza_steak\pizza_real.jpg")
 
-ready_img = load_and_prep_image(r"C:\Users\moralesja.group\Downloads\cat.jpg")
+ready_img = load_and_prep_image(r"C:\Users\moralesja.group\Downloads\dog.jpg")
 
 final_data = new_model.predict(tf.expand_dims(ready_img,axis=0))
 
