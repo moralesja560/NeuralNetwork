@@ -88,11 +88,7 @@ PP_test_feat_tr = smoke_pipeline.transform(PP_test_feat)
 
 model_1 = tf.keras.Sequential([
 	#tf.keras.layers.Dense(1, activation=tf.keras.activations.linear)
-	tf.keras.layers.Dense(20,activation="relu"),
-	tf.keras.layers.Dense(20,activation="relu"),
-	tf.keras.layers.Dense(20,activation="relu"),
-	tf.keras.layers.Dense(20,activation="relu"),
-	tf.keras.layers.Dense(20,activation="relu"),
+	tf.keras.layers.Dense(50,activation="tanh"),
 	#tf.keras.layers.Dense(4,activation=None),
 	tf.keras.layers.Dense(1)
 ])
@@ -102,23 +98,28 @@ model_1.compile(
 	loss = tf.keras.losses.MeanAbsoluteError(),
 	optimizer=tf.keras.optimizers.Adam(learning_rate=0.002),
 	metrics=["mae"])
+
 cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"PP_model"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
 early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=4,verbose=1,mode='min')
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 #3.Fit the model
-history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=100)
-#=valid_data,validation_steps=len(valid_data)
+#history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=200)
+
+
 
 
 ## model has been saved, so let's use it.
 saved_model = tf.keras.models.load_model(resource_path(r"PP_model"))
 
 
+array_predict = smoke_pipeline.transform([[28.24,  64.69,  1007.35,  61.14,  0.028034, 1826.8456]])
+print(saved_model.predict(array_predict))
+
 
 # Test Data truth dataframing
 PP_test_label_df = pd.DataFrame(PP_test_label)
 # Test data truth storage
-PP_test_label_df.to_csv(resource_path(r"test_label.csv"))
+PP_test_label_df.to_csv(resource_path(r"test_label2.csv"))
 
 #Test data prediction
 predictions = saved_model.predict(PP_test_feat_tr)
@@ -126,6 +127,6 @@ predictions = saved_model.predict(PP_test_feat_tr)
 hi_df = pd.DataFrame(predictions)
 
 # prediction storage
-hi_df.to_csv(resource_path(r"predict.csv"))
+hi_df.to_csv(resource_path(r"predict2.csv"))
 
 
