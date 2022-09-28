@@ -1,10 +1,31 @@
-import tensorflow as tf
-import sys
-import os
-import pandas as pd
 import matplotlib.pyplot as plt
+import seaborn as sns
 
-tf.random.set_seed(42)
+import warnings
+warnings.filterwarnings('ignore')
+
+from scipy import stats
+from scipy.stats import norm, skew
+import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn import metrics
+from sklearn import ensemble
+from sklearn.utils import shuffle
+from sklearn.metrics import mean_squared_error, r2_score
+
+from sklearn.linear_model import LinearRegression
+from sklearn.tree import DecisionTreeRegressor
+from sklearn.svm import SVR
+from sklearn.ensemble import RandomForestRegressor
+import lightgbm as lgb
+import pandas as pd
+from sklearn.model_selection import GridSearchCV,RandomizedSearchCV
+
+import os,sys
+import time
+
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -18,115 +39,219 @@ training_PP = pd.read_csv(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNet
 predict_data = pd.read_csv(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\Kaggle_Dataset\Testing.csv')
 
 
-print(training_PP.head())
+#print(training_PP.head())
 
-
-corr_matrix = training_PP.corr()
-print(corr_matrix["PE"].sort_values(ascending=False))
-
-from pandas.plotting import scatter_matrix
-scatter_matrix(training_PP,figsize=(12,8))
+sns.heatmap(training_PP.corr(),annot=True, cbar=True,cmap="Blues",fmt='.2f')
+sns.pairplot(training_PP)
 #plt.show()
 
-# most promising is AT (Ambient Temperature to PE (Energy Output)
-# training_PP.plot(kind="scatter", x="PE",y="AT",alpha=0.1)
-# plt.show()
+# Data Preparation
 
-# let's try with some combination
-training_PP["TandP"] = training_PP["AT"]/training_PP["AP"]
-training_PP["AT_EV"] = training_PP["EV"]*training_PP["AT"]
+X = training_PP.drop('PE',axis=1)
+y = training_PP['PE']
 
-corr_matrix = training_PP.corr()
-print(corr_matrix["PE"].sort_values(ascending=False))
+X_train, X_test, y_train, y_test = train_test_split(X,y, test_size=0.2, random_state=42)
 
-#######################################  PREPARE THE DATA FOR MACHINE LEARNING ALGORITHMS
+y_train= y_train.values.reshape(-1,1)
+y_test= y_test.values.reshape(-1,1)
 
-######### Data Cleaning
-# Any missing values?
-print(training_PP.isnull().values.any())
+sc_X = StandardScaler()
+sc_y = StandardScaler()
+X_train = sc_X.fit_transform(X_train)
+X_test = sc_X.fit_transform(X_test)
+y_train = sc_X.fit_transform(y_train)
+y_test = sc_y.fit_transform(y_test)
 
-"""
-Missing values? we can train a SimpleImputer instance to fill those blanks
+#---------------------------- Linear Regression
 
-Want to add new features? use sklearn.base import BaseEstimator, TransformerMixin
+reg_model = LinearRegression()
+reg_model.fit(X_train,y_train)
+print(reg_model)
 
-Categorical data? use one-hot encoding to convert text into numeric columns
-
-Already using numerical data? let's optimize the dataset by scaling it.
-
-"""
-from sklearn.model_selection import train_test_split
-train_set, test_set = train_test_split(training_PP, test_size=0.2, random_state=42)
-
-PP_train_feat = train_set.drop("PE", axis=1)
-PP_train_label = train_set["PE"].copy()
-
-PP_test_feat = test_set.drop("PE", axis=1)
-PP_test_label = test_set["PE"].copy()
+predictions = reg_model.predict(X_test)
+predictions= predictions.reshape(-1,1)
 
 
-print(PP_train_feat.head())
+plt.figure(figsize=(10,5))
+plt.scatter(y_test,predictions)
+plt.xlabel('Y Test')
+plt.ylabel('Predicted Y')
+#plt.show()
 
-print(PP_train_feat.describe())
-print(PP_train_label.describe())
+plt.figure(figsize=(10,5))
+plt.plot(y_test,label ='Test')
+plt.plot(predictions, label = 'predict')
+#plt.show()
 
+#print('MAE:', metrics.mean_absolute_error(y_test, predictions))
+#print('MSE:', metrics.mean_squared_error(y_test, predictions))
 
-from sklearn.impute import SimpleImputer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
+#print('R2:', metrics.r2_score(y_test, predictions))
 
+#-------------- Decision Tree Regression-------------------------#
 
-smoke_pipeline = Pipeline([
-('imputer', SimpleImputer(strategy="median")),
-('std_scaler', StandardScaler()),
-])
+tree_reg = DecisionTreeRegressor()
+tree_reg.fit(X_train,y_train)
 
-
-PP_train_feat_tr = smoke_pipeline.fit_transform(PP_train_feat)
-PP_test_feat_tr = smoke_pipeline.transform(PP_test_feat)
-
-
-model_1 = tf.keras.Sequential([
-	#tf.keras.layers.Dense(1, activation=tf.keras.activations.linear)
-	tf.keras.layers.Dense(50,activation="tanh"),
-	#tf.keras.layers.Dense(4,activation=None),
-	tf.keras.layers.Dense(1)
-])
-
-#2 Compile the model
-model_1.compile(
-	loss = tf.keras.losses.MeanAbsoluteError(),
-	optimizer=tf.keras.optimizers.Adam(learning_rate=0.002),
-	metrics=["mae"])
-
-cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"PP_model"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
-early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=4,verbose=1,mode='min')
-#lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
-#3.Fit the model
-#history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=200)
+pred_tree = tree_reg.predict(X_test)
+pred_tree= pred_tree.reshape(-1,1)
 
 
+plt.figure(figsize=(10,5))
+plt.scatter(y_test,pred_tree)
+plt.xlabel('Y Test ')
+plt.ylabel('Tree Pred Y')
+#plt.show()
+
+plt.figure(figsize=(10,5))
+plt.plot(y_test,label ='Test')
+plt.plot(predictions, label = 'Tree pred')
+#plt.show()
+
+#print('MAE:', metrics.mean_absolute_error(y_test, pred_tree))
+#print('MSE:', metrics.mean_squared_error(y_test, pred_tree))
+
+#print('R2:', metrics.r2_score(y_test, pred_tree))
 
 
-## model has been saved, so let's use it.
-saved_model = tf.keras.models.load_model(resource_path(r"PP_model"))
+#-------------- Random Forest Regression-------------------------#
+
+rand_reg = RandomForestRegressor(bootstrap=True, max_features= 2, n_estimators=40)
+rand_reg.fit(X_train,y_train)
+pred_randf = rand_reg.predict(X_test)
+pred_randf= pred_randf.reshape(-1,1)
+
+#print('MAE:', metrics.mean_absolute_error(y_test, pred_randf))
+#print('MSE:', metrics.mean_squared_error(y_test, pred_randf))
+
+#print('R2:', metrics.r2_score(y_test, pred_randf))
+
+#----------------Suport Vector Machine Regression-------------------------#
+
+svr_reg =SVR(kernel = 'rbf')
+svr_reg.fit(X_train,y_train)
+
+svr_pred = svr_reg.predict(X_test)
+svr_pred= svr_pred.reshape(-1,1)
 
 
-array_predict = smoke_pipeline.transform([[28.24,  64.69,  1007.35,  61.14,  0.028034, 1826.8456]])
-print(saved_model.predict(array_predict))
 
 
-# Test Data truth dataframing
-PP_test_label_df = pd.DataFrame(PP_test_label)
-# Test data truth storage
-PP_test_label_df.to_csv(resource_path(r"test_label2.csv"))
+##---------------------------Cross Validation Evaluation-----------------
 
-#Test data prediction
-predictions = saved_model.predict(PP_test_feat_tr)
-#Test data storage
-hi_df = pd.DataFrame(predictions)
+from sklearn.model_selection import cross_val_score
 
-# prediction storage
-hi_df.to_csv(resource_path(r"predict2.csv"))
+score_lin = cross_val_score(reg_model,X_train,y_train,scoring="neg_mean_squared_error",cv=10)
+
+tree_rmse_scores_lin = np.sqrt(-score_lin)
+
+print(f"Linear Regression Scores:  {score_lin.round(4)}")
+print(f"Linear Regression Mean:  {score_lin.mean():.4f}")
+print(f"Linear Regression Std Dev:  {score_lin.std():.4f}")
+print('Linear Regression Training RMSE:', np.sqrt(metrics.mean_squared_error(y_test, predictions)).round(4))
+print(f"Linear Regression RMSE:  {tree_rmse_scores_lin.round(4)}")
+
+
+score_tree = cross_val_score(tree_reg,X_train,y_train,scoring="neg_mean_squared_error",cv=10)
+
+tree_rmse_scores = np.sqrt(-score_tree)
+
+print(f"Decision Tree Scores:  {score_tree.round(4)}")
+print(f"Decision Tree Mean:  {score_tree.mean():.4f}")
+print(f"Decision Tree Std Dev:  {score_tree.std():.4f}")
+print('Decision Tree Training RMSE:', np.sqrt(metrics.mean_squared_error(y_test, pred_tree)).round(4))
+print(f"Decision Tree RMSE:  {tree_rmse_scores.round(4)}")
+
+score_rand = cross_val_score(rand_reg,X_train,y_train,scoring="neg_mean_squared_error",cv=10)
+
+rmse_scores_rand = np.sqrt(-score_rand)
+
+print(f"Random Forest Scores:  {score_rand.round(4)}")
+print(f"Random Forest Mean:  {score_rand.mean():.4f}")
+print(f"Random Forest Std Dev:  {score_rand.std():.4f}")
+print('Random Forest Training RMSE:', np.sqrt(metrics.mean_squared_error(y_test, pred_randf)).round(4))
+print(f"Random Forest RMSE:  {rmse_scores_rand.round(4)}")
+
+
+svm_score = cross_val_score(rand_reg,X_train,y_train,scoring="neg_mean_squared_error",cv=10)
+
+rmse_scores_svm = np.sqrt(-svm_score)
+
+print(f"SVM Scores:  {svm_score.round(4)}")
+print(f"SVM Mean:  {svm_score.mean():.4f}")
+print(f"SVM Std Dev:  {svm_score.std():.4f}")
+print('SVM Training RMSE:', np.sqrt(metrics.mean_squared_error(y_test, svr_pred)).round(4))
+print(f"SVM RMSE:  {rmse_scores_svm.round(4)}")
+
+
+error_rate=pd.DataFrame(np.array([
+						metrics.mean_squared_error(y_test, predictions),
+						metrics.mean_squared_error(y_test, pred_tree),
+						metrics.mean_squared_error(y_test, pred_randf),
+						metrics.mean_squared_error(y_test, svr_pred)]))
+
+error_rate.index=['Linear','Dec Tree','RandForest','SVM']
+
+plt.figure(figsize=(10,5))
+plt.plot(error_rate)
+plt.show()
+
+
+#-----------------Hyperparameter tuning: RandomForestRegressor----------------#
+
+from sklearn.model_selection import GridSearchCV
+
+
+parameter_grid = [{
+	'n_estimators' : [3,10,30,35,40,45,50,100],
+	'max_features' : [1,2,3,4,5],
+	'bootstrap' : [False,True]}]
+
+grid_search = GridSearchCV(rand_reg,
+				parameter_grid,
+				cv=5,
+				scoring='neg_mean_squared_error',
+				return_train_score=True)
+
+grid_search.fit(X_train,y_train)
+
+print(f'Best Parameters: {grid_search.best_params_}')
+print(f'Best Estimator: {grid_search.best_estimator_}')
+
+cvres = grid_search.cv_results_
+for mean_score, params in zip(cvres["mean_test_score"], cvres["params"]):
+	print(np.sqrt(-mean_score),params)
+
+
+#-----------------Hyperparameter tuning: SVM----------------#
+
+from sklearn.model_selection import GridSearchCV
+
+
+parameter_grid2 = [{
+	'degree' : [1,2,3,],
+	'gamma' : ['scale','auto'],
+	'shrinking' : [False,True],
+	'cache_size' : [200,400],
+	'kernel':['poly','rbf','sigmoid']}
+	
+	
+	]
+
+grid_search2 = GridSearchCV(svr_reg,
+				parameter_grid2,
+				cv=5,
+				scoring='neg_mean_squared_error',
+				return_train_score=True)
+
+grid_search2.fit(X_train,y_train)
+
+print(f'Best Parameters SVM: {grid_search2.best_params_}')
+print(f'Best Estimator SVM: {grid_search2.best_estimator_}')
+
+cvres2 = grid_search2.cv_results_
+for mean_score, params in zip(cvres2["mean_test_score"], cvres2["params"]):
+	print(np.sqrt(-mean_score),params)
+
 
 
