@@ -1,18 +1,24 @@
 import tensorflow as tf
 import numpy as np
+import sys,os
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
 
-new_model = tf.keras.models.load_model(r'C:\Users\moralesja.group\Documents\SC_Repo\NeuralNetwork\savedmodel')
-
-# Check its architecture
-new_model.summary()
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
 
 #make a prediction using the trained model 
 
-sample = -7.0
+saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model')
 
-for i in range(0,20):
-	print(f"Valor ingresado a la red neuronal: {sample} resultado correcto: {sample+10}")
-	neural_guess =  round(np.double(new_model.predict(np.array([sample]))),4)
-	print(f"valor de la red neuronal {neural_guess}")
-	print(f"diferencia de valores {round((sample+10)-(neural_guess),3)}")
-	sample += 10
+
+#smoke_pipeline = Pipeline([
+#('std_scaler', StandardScaler()
+# ),
+#])
+
+
+array_predict = np.array([[18.3,1,0,14.38,57,1016,19,15.10,45.3,3]])
+print(saved_model.predict(array_predict))
