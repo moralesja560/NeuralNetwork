@@ -21,7 +21,7 @@ def resource_path(relative_path):
 
 
 #put the dataset into a pandas dataframe
-water = pd.read_csv('water3.csv')
+water = pd.read_csv('water6.csv')
 
 #fix a couple of columns
 water['ITW1_PN'] = water['ITW1_PN'].astype(str).str[:4]
@@ -31,8 +31,7 @@ water['ITW1_PN'] = water['ITW1_PN'].astype(float)
 water['ITW2_PN'] = water['ITW2_PN'].astype(float)
 water['ITW3_PN'] = water['ITW3_PN'].astype(float)
 
-print(water.info())
-
+print(water.head())
 ## separate the dataset in two subsets: 80% of entire dataset will be the training data, and the remaining dataset will be the test data
 train_set, test_set = train_test_split(water, test_size=0.2, random_state=42)
 
@@ -127,7 +126,7 @@ print(f"{y_pred}")
 
 model_1 = tf.keras.Sequential([
 	tf.keras.layers.Dense(10, activation ='relu'),
-    tf.keras.layers.Dense(10, activation ='relu'),
+    tf.keras.layers.Dense(10, activation ='sigmoid'),
 	tf.keras.layers.Dense(1)
 ])
 
@@ -138,7 +137,7 @@ model_1.compile(
 	metrics=["mae"])
 
 cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
-early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=4,verbose=1,mode='min')
+early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=10,verbose=1,mode='min')
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 # 3.Fit the model
 #history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=200)
@@ -153,7 +152,7 @@ saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\D
 
 x_hour = 10
 x_ITW1_PN = 14.2
-x_ITW2_PN = 12.2
+x_ITW2_PN = 0
 x_ITW3_PN = 14.2
 x_ITW1_Auto = 1
 x_ITW2_Auto = 0

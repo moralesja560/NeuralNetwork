@@ -81,10 +81,13 @@ def write_log(i_gwk_temp,i_part_number,i_part_number2,i_part_number3,status1,sta
 		i_bomba2 = 1
 	else:
 		i_bomba2 = 0
-
-	i_gwk_temp = i_gwk_temp/10
-	i_temp = i_temp - 273
-	i_temp_torre = i_temp_torre/10
+		
+	if i_gwk_temp > 50:
+		i_gwk_temp = i_gwk_temp/10
+	if i_temp > 200:
+		i_temp = i_temp - 273
+	if i_temp_torre > 50:
+		i_temp_torre = i_temp_torre/10
 
 
 	new_row = {'timestamp' : [dt_string], 'temp_adentro' : [i_gwk_temp], 'ITW1_PN' : [i_part_number], 'ITW2_PN' : [i_part_number2], 'ITW3_PN' : [i_part_number3], 'ITW1_Auto' : [status1], 'ITW2_Auto' : [status2], 'ITW3_Auto' : [status3],'Temp_Torre' : [i_temp_torre], 'Bomba_1' : [i_bomba1], 'Bomba_2' : [i_bomba2], 'Clima_Temp' : [i_temp], 'Clima_Humedad' : [i_humidity], 'ITW1_Spd' : [i_speed_1], 'ITW2_Spd' : [i_speed_2], 'ITW3_Spd' : [i_speed_3], 'ITW1_KG' : [i_kg_1], 'ITW2_KG' : [i_kg_2], 'ITW3_KG' : [i_kg_3]}
@@ -92,7 +95,28 @@ def write_log(i_gwk_temp,i_part_number,i_part_number2,i_part_number3,status1,sta
 	pd_concat = pd.concat([pd_log,new_row_pd])
 	pd_concat.to_csv(pd_ruta,index=False)
 
-		
+
+def write_log_pred(prediction,real):
+	now = datetime.now()
+	dt_string = now.strftime("%d/%m/%Y %H:%M:%S")
+	#print("date and time =", dt_string)	
+	mis_docs = My_Documents(5)
+	pd_ruta = str(mis_docs)+ r"\registro_preds.csv"
+	pd_file_exists = os.path.exists(pd_ruta)
+	
+	#check if pandas DataFrame exists to load the stuff or to create with dummy data.
+	if pd_file_exists:
+		pd_log = pd.read_csv(pd_ruta)
+	else:
+		pd_log = pd.DataFrame(pd_dict2)
+
+	
+	new_row = {'timestamp' : [dt_string], 'temp_pred' : [round(prediction,2)], 'temp_Real' : [real]}
+	new_row_pd = pd.DataFrame(new_row)
+	pd_concat = pd.concat([pd_log,new_row_pd])
+	pd_concat.to_csv(pd_ruta,index=False)
+
+	
 
 def watchdog_t(shutdown_queue,PLC_1_queue_i,PLC_2_queue_i,PLC_3_queue_i,PLC_4_queue_i):
 	while True:
@@ -621,8 +645,10 @@ def process_coordinator():
 			scaled = scaler.transform([[x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG]])
 			predict_data = saved_model.predict(scaled,verbose=0)
 			predict_data = predict_data.item()
-			print(f"Data extraña {x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG}")
-			print(f"Predict: {predict_data:,.1f} / Real: {i_gwk_temp:,.1f}. Deviation is {(((predict_data)-(i_gwk_temp))/((i_gwk_temp + predict_data)/2)):.2%}")
+			if opt.debug:
+				print(f"Data extraña {x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG}")
+				print(f"Predict: {predict_data:,.1f} / Real: {i_gwk_temp:,.1f}. Deviation is {(((predict_data)-(i_gwk_temp))/((i_gwk_temp + predict_data)/2)):.2%}")
+			write_log_pred(predict_data,i_gwk_temp)
 
 
 
@@ -630,6 +656,7 @@ if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('--pred', action='store_true', help='Enable prediction mode')
 	parser.add_argument('--save_data', action='store_true', help='write_log_enabled')
+	parser.add_argument('--debug', action='store_true', help='write_log_enabled')
 	
 	
 	opt = parser.parse_args()
@@ -638,17 +665,17 @@ if __name__ == '__main__':
 
 	if opt.pred:
 		print(" +++++++++++++ MODO PREDICCION")
-		X_train = pd.read_csv('X_train_load.csv',index_col=False)
+		X_train = pd.read_csv(resource_path('resources\X_train_load.csv'),index_col=False)
 		scaler = StandardScaler()
 		X_train_scaled = scaler.fit_transform(X_train)
-		saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe')
+		saved_model = tf.keras.models.load_model(resource_path('TF_model_prototipe'))
 		hilo_block=True
 	else:
 		hilo_block = False
 
 
 	pd_dict = {'timestamp' : ['dumy'], 'temp_adentro' : ['dumy'], 'ITW1_PN' : ['dumy'], 'ITW2_PN' : ['dumy'], 'ITW3_PN' : ['dumy'], 'ITW1_Auto' : ['dumy'], 'ITW2_Auto' : ['dumy'], 'ITW3_Auto' : ['dumy'],'Temp_Torre' : ['dumy'], 'Bomba_1' : ['dumy'], 'Bomba_2' : ['dumy'], 'Clima_Temp' : ['dumy'], 'Clima_Humedad' : ['dumy'], 'ITW1_Spd' : ['dumy'], 'ITW2_Spd' : ['dumy'], 'ITW3_Spd' : ['dumy'], 'ITW1_KG' : ['dumy'], 'ITW2_KG' : ['dumy'], 'ITW3_KG' : ['dumy']}
-	
+	pd_dict2 = {'timestamp' : ['dummy'], 'temp_pred' : ['dummy'], 'temp_Real' : ['dummy']}
 
 # The three queues:
 	PLC_1_queue_i = Queue()
