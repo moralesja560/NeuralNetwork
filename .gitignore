@@ -11,10 +11,13 @@ __pycache__/
 .Python
 build/
 develop-eggs/
+temp_store_xml/
 dist/
 downloads/
 TF_model
+TF_model_prototipe6
 TF_model_prototipe
+TF_model_prototipe_temp
 
 eggs/
 .eggs/
