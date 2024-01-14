@@ -4,7 +4,7 @@ import pandas as pd
 import sys
 
 #open the file
-fileptr = open("620493.xml","r")
+fileptr = open("temp_store_xml/620493.xml","r")
 
 #read xml content from the file
 xml_content= fileptr.read()
@@ -89,12 +89,12 @@ for i in range(0,len(my_ordered_dict['EXPORT']['FKTeileKatalog'])):
 for i in range(0,len(my_ordered_dict['EXPORT']['FKGeoElement'])):
 	df18 = pd.DataFrame(my_ordered_dict['EXPORT']['FKGeoElement'][i],list(range(len(my_ordered_dict['EXPORT']['FKGeoElement'][i]))))
 	df18.to_csv(f'temp_store_xml/FKGeoElement{i}.csv', index=False, header=True)
-	
+
 for i in range(0,len(my_ordered_dict['EXPORT']['FKMakroZeile'])):
 	df19 = pd.DataFrame(my_ordered_dict['EXPORT']['FKMakroZeile'][i],list(range(len(my_ordered_dict['EXPORT']['FKMakroZeile'][i]))))
 	df19.to_csv(f'temp_store_xml/FKMakroZeile{i}.csv', index=False, header=True)
 	
-
+"""
 for i in range(0,len(my_ordered_dict['EXPORT']['FKGlobWert'])):
 	df23 = pd.DataFrame(my_ordered_dict['EXPORT']['FKGlobWert'][i],list(range(len(my_ordered_dict['EXPORT']['FKGlobWert'][i]))))
 	df23.to_csv(f'temp_store_xml/FKGlobWert{i}.csv', index=False, header=True)
@@ -106,7 +106,7 @@ for i in range(0,len(my_ordered_dict['EXPORT']['FKFreiesElement'])):
 for i in range(0,len(my_ordered_dict['EXPORT']['FKKoordWert'])):
 	df25 = pd.DataFrame(my_ordered_dict['EXPORT']['FKKoordWert'][i],list(range(len(my_ordered_dict['EXPORT']['FKKoordWert'][i]))))
 	df25.to_csv(f'temp_store_xml/FKFreiesElement{i}.csv', index=False, header=True)
-	
+"""	
 
 
 

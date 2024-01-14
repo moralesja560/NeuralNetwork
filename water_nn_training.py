@@ -134,7 +134,7 @@ model_1.compile(
 	optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
 	metrics=["mae"])
 
-cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe_temp"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe8"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
 early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=18,verbose=1,mode='min')
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 # 3.Fit the model
@@ -143,7 +143,7 @@ history = model_1.fit(X_train_scaled, y_train,callbacks=[early_cb,cp_callback],s
 
 
 
-saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe')
+saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe8')
 
 
 #Temp_Torre  Bomba_1  Bomba_2  Clima_Temp  Clima_Humedad  Hour   avg_diam  acc_diam  lines_running
