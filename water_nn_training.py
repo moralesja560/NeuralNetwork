@@ -21,7 +21,7 @@ def resource_path(relative_path):
 
 
 #put the dataset into a pandas dataframe
-water = pd.read_csv('water7.csv')
+water = pd.read_csv('water8.csv')
 
 #fix a couple of columns
 water['ITW1_PN'] = water['ITW1_PN']/100
@@ -94,7 +94,7 @@ print(water_labels.iloc[:5].values)
 
 X_train_full, X_test, y_train_full, y_test = train_test_split(water_data, water_labels)
 X_train, X_valid, y_train, y_valid = train_test_split(X_train_full, y_train_full)
-#X_train.to_csv(resource_path("X_train_load.csv"),index=False)
+X_train.to_csv(resource_path("X_train_load.csv"),index=False)
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_valid_scaled = scaler.transform(X_valid)
@@ -120,11 +120,12 @@ print(f"{y_pred}")
 
 
 model_1 = tf.keras.Sequential([
-	tf.keras.layers.Dense(20, activation ='tanh'),
-    tf.keras.layers.Dense(20, activation ='tanh'),
-    tf.keras.layers.Dense(20, activation ='tanh'),
-    tf.keras.layers.Dense(20, activation ='tanh'),
-    tf.keras.layers.Dense(20, activation ='tanh'),
+	tf.keras.layers.Dense(30, activation ='tanh'),
+    tf.keras.layers.Dense(30, activation ='sigmoid'),
+    tf.keras.layers.Dense(30, activation ='tanh'),
+    tf.keras.layers.Dense(30, activation ='sigmoid'),
+    tf.keras.layers.Dense(30, activation ='tanh'),
+    tf.keras.layers.Dense(30, activation ='sigmoid'),
 	tf.keras.layers.Dense(1)
 ])
 
@@ -134,7 +135,7 @@ model_1.compile(
 	optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
 	metrics=["mae"])
 
-cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe8"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe9"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
 early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=18,verbose=1,mode='min')
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 # 3.Fit the model
@@ -143,7 +144,7 @@ history = model_1.fit(X_train_scaled, y_train,callbacks=[early_cb,cp_callback],s
 
 
 
-saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe8')
+saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe9')
 
 
 #Temp_Torre  Bomba_1  Bomba_2  Clima_Temp  Clima_Humedad  Hour   avg_diam  acc_diam  lines_running

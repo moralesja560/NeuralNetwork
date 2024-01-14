@@ -14,6 +14,7 @@ develop-eggs/
 temp_store_xml/
 dist/
 downloads/
+CSV water
 TF_model
 TF_model_prototipe6
 TF_model_prototipe8
