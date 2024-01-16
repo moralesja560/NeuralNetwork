@@ -19,9 +19,11 @@ def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
+version = 9
+
 
 #put the dataset into a pandas dataframe
-water = pd.read_csv('water8.csv')
+water = pd.read_csv(f'water{version}.csv')
 
 #fix a couple of columns
 water['ITW1_PN'] = water['ITW1_PN']/100
@@ -94,7 +96,7 @@ print(water_labels.iloc[:5].values)
 
 X_train_full, X_test, y_train_full, y_test = train_test_split(water_data, water_labels)
 X_train, X_valid, y_train, y_valid = train_test_split(X_train_full, y_train_full)
-X_train.to_csv(resource_path("X_train_load.csv"),index=False)
+X_train.to_csv(resource_path(f"X_train_load{version}.csv"),index=False)
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
 X_valid_scaled = scaler.transform(X_valid)
@@ -120,23 +122,25 @@ print(f"{y_pred}")
 
 
 model_1 = tf.keras.Sequential([
-	tf.keras.layers.Dense(30, activation ='tanh'),
-    tf.keras.layers.Dense(30, activation ='sigmoid'),
-    tf.keras.layers.Dense(30, activation ='tanh'),
-    tf.keras.layers.Dense(30, activation ='sigmoid'),
-    tf.keras.layers.Dense(30, activation ='tanh'),
-    tf.keras.layers.Dense(30, activation ='sigmoid'),
+	tf.keras.layers.Normalization(input_shape=X_train.shape[1:]),
+    tf.keras.layers.Dense(128, activation ='sigmoid'),
+    tf.keras.layers.Dense(64, activation ='tanh'),
+    #tf.keras.layers.Dense(64, activation ='tanh'),
+    #tf.keras.layers.Dense(64, activation ='sigmoid'),
+    #tf.keras.layers.Dense(64, activation ='tanh'),
+    #tf.keras.layers.Dense(64, activation ='sigmoid'),
 	tf.keras.layers.Dense(1)
 ])
 
 #2 Compile the model
 model_1.compile(
-	loss = tf.keras.losses.MeanAbsoluteError(),
+	loss = 'mse',
 	optimizer=tf.keras.optimizers.Adam(learning_rate=0.001),
-	metrics=["mae"])
+    #optimizer = tf.keras.optimizers.SGD(learning_rate=0.001),
+	metrics=["RootMeanSquaredError"])
 
-cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(r"TF_model_prototipe9"), monitor='val_mae',save_best_only= True,save_weights_only=False,verbose=1)
-early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_mae',min_delta=0.01,patience=18,verbose=1,mode='min')
+cp_callback = tf.keras.callbacks.ModelCheckpoint(filepath=resource_path(f"TF_model_prototipe{version}"), monitor='val_root_mean_squared_error',save_best_only= True,save_weights_only=False,verbose=1)
+early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_root_mean_squared_error',min_delta=0.01,patience=10,verbose=1,mode='min')
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 # 3.Fit the model
 #history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=200)
@@ -144,7 +148,7 @@ history = model_1.fit(X_train_scaled, y_train,callbacks=[early_cb,cp_callback],s
 
 
 
-saved_model = tf.keras.models.load_model(r'C:\Users\moralesjo\OneDrive - Mubea\Documents\Python_S\NeuralNetwork\TF_model_prototipe9')
+saved_model = tf.keras.models.load_model(resource_path(f"TF_model_prototipe{version}"))
 
 
 #Temp_Torre  Bomba_1  Bomba_2  Clima_Temp  Clima_Humedad  Hour   avg_diam  acc_diam  lines_running
