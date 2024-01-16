@@ -28,15 +28,6 @@ Ncode_ID3 = []
 NC_satz = []
 
 
-
-"""
-for i in range(0,len(my_ordered_dict['EXPORT']['FKGeoElement'])):	
-	
-	df18 = pd.DataFrame(my_ordered_dict['EXPORT']['FKGeoElement'][i],list(range(len(my_ordered_dict['EXPORT']['FKGeoElement'][i]))))	
-	
-	df18.to_csv(f'temp_store_xml/FKGeoElement{i}.csv', index=False, header=True)
-"""
-
 #obtain the total steps
 for i in range(0,len(my_ordered_dict['EXPORT']['FKGeoElement'])):	
 	df18 = pd.DataFrame(my_ordered_dict['EXPORT']['FKGeoElement'][i],list(range(len(my_ordered_dict['EXPORT']['FKGeoElement'][i]))))	
