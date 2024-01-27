@@ -51,44 +51,7 @@ def write_log(i_gwk_temp,i_part_number,i_part_number2,i_part_number3,status1,sta
 		pd_log = pd.read_csv(pd_ruta)
 	else:
 		pd_log = pd.DataFrame(pd_dict)
-
-	#convertir bool to uint
-	if status1:
-		status1 = 1
-	else:
-		status1 = 0
-		i_speed_1 = 0
-		i_part_number = 0
-	if status2:
-		status2 = 1
-	else:
-		status2 = 0
-		i_speed_2 = 0
-		i_part_number2 = 0
-	if status3:
-		status3 = 1
-	else:
-		status3 = 0
-		i_speed_3 = 0
-		i_part_number3 = 0
 	
-	if i_bomba1:
-		i_bomba1 = 1
-	else:
-		i_bomba1 = 0
-		
-	if i_bomba2:
-		i_bomba2 = 1
-	else:
-		i_bomba2 = 0
-		
-	if i_gwk_temp > 50:
-		i_gwk_temp = i_gwk_temp/10
-	if i_temp > 200:
-		i_temp = i_temp - 273
-	if i_temp_torre > 50:
-		i_temp_torre = i_temp_torre/10
-
 
 	new_row = {'timestamp' : [dt_string], 'temp_adentro' : [i_gwk_temp], 'ITW1_PN' : [i_part_number], 'ITW2_PN' : [i_part_number2], 'ITW3_PN' : [i_part_number3], 'ITW1_Auto' : [status1], 'ITW2_Auto' : [status2], 'ITW3_Auto' : [status3],'Temp_Torre' : [i_temp_torre], 'Bomba_1' : [i_bomba1], 'Bomba_2' : [i_bomba2], 'Clima_Temp' : [i_temp], 'Clima_Humedad' : [i_humidity], 'ITW1_Spd' : [i_speed_1], 'ITW2_Spd' : [i_speed_2], 'ITW3_Spd' : [i_speed_3], 'ITW1_KG' : [i_kg_1], 'ITW2_KG' : [i_kg_2], 'ITW3_KG' : [i_kg_3]}
 	new_row_pd = pd.DataFrame(new_row)
@@ -110,6 +73,7 @@ def write_log_pred(prediction,real):
 	else:
 		pd_log = pd.DataFrame(pd_dict2)
 
+	
 	
 	new_row = {'timestamp' : [dt_string], 'temp_pred' : [round(prediction,2)], 'temp_Real' : [real]}
 	new_row_pd = pd.DataFrame(new_row)
@@ -173,17 +137,27 @@ def PLC_comms1(PLC_1_queue_i,PLC_1_queue_o,plc1_ip,plc1_netid):
 		try:
 			#Normal program execution
 			plc1_num_parte= plc1.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=part_number)
+			plc1_temp = 0
 			plc1_temp= plc1.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=gwk_temp)
 			plc1_stat= plc1.read_by_name("", plc_datatype=pyads.PLCTYPE_BOOL,handle=status_handle)
 			plc1_spd= plc1.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=speed_handle)
 			plc1_kg= plc1.read_by_name("", plc_datatype=pyads.PLCTYPE_DINT,handle=kg_handle)
 			# send the data over the queue
+			print(f"dato de PLC1 recibido {plc1_temp} ")
+			#convert bool to integer
+			if plc1_stat:
+				plc1_stat = 1
+			else:
+				plc1_stat = 0
+				plc1_spd = 0
+				plc1_kg = 0
+				plc1_num_parte = 0
 			PLC_1_queue_o.put((plc1_temp,plc1_num_parte,plc1_stat,plc1_spd,plc1_kg))
 			time.sleep(4)
 
 
 		except Exception as e:
-			print(f"Could not update in PLC: error {e}")
+			print(f"Could not update in PLC1: error {e}")
 			plc1,gwk_temp,part_number,status_handle,speed_handle,kg_handle = aux_PLC_comms(plc1_ip,plc1_netid)
 			continue
 
@@ -255,12 +229,20 @@ def PLC_comms2(PLC_2_queue_i,PLC_2_queue_o,plc2_ip,plc2_netid):
 			plc2_spd= plc2.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=speed_handle)
 			plc2_kg= plc2.read_by_name("", plc_datatype=pyads.PLCTYPE_DINT,handle=kg_handle)
 			# send the data over the queue
+			if plc2_stat:
+				plc2_stat = 1
+			else:
+				plc2_stat = 0
+				plc2_spd = 0
+				plc2_kg = 0
+				plc2_num_parte = 0
+
 			PLC_2_queue_o.put((plc2_num_parte,plc2_stat,plc2_spd,plc2_kg))
 			time.sleep(4)
 
 
 		except Exception as e:
-			print(f"Could not update in PLC: error {e}")
+			print(f"Could not update in PLC2: error {e}")
 			plc2,part_number,status_handle,speed_handle,kg_handle = aux_PLC_comms_2(plc1_ip,plc1_netid)
 			continue
 
@@ -330,12 +312,19 @@ def PLC_comms3(PLC_3_queue_i,PLC_3_queue_o,plc3_ip,plc3_netid):
 			plc3_spd= plc3.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=speed_handle)
 			plc3_kg = plc3.read_by_name("", plc_datatype=pyads.PLCTYPE_DINT,handle=kg_handle)
 			# send the data over the queue
+			if plc3_stat:
+				plc3_stat = 1
+			else:
+				plc3_stat = 0
+				plc3_spd = 0
+				plc3_kg = 0
+				plc3_num_parte = 0
 			PLC_3_queue_o.put((plc3_num_parte,plc3_stat,plc3_spd,plc3_kg))
 			time.sleep(4)
 
 
 		except Exception as e:
-			print(f"Could not update in PLC: error {e}")
+			print(f"Could not update in PLC3: error {e}")
 			plc3,part_number,status_handle,speed_handle,kg_handle = aux_PLC_comms_3(plc1_ip,plc1_netid)
 			continue
 
@@ -400,14 +389,22 @@ def PLC_comms4(PLC_4_queue_i,PLC_4_queue_o,plc4_ip,plc4_netid):
 			plc4_temp_torre= plc4.read_by_name("", plc_datatype=pyads.PLCTYPE_UINT,handle=tower_temp)
 			plc4_bomba1 = plc4.read_by_name("", plc_datatype=pyads.PLCTYPE_BOOL,handle=bomba_1_status)
 			plc4_bomba2 = plc4.read_by_name("", plc_datatype=pyads.PLCTYPE_BOOL,handle=bomba_2_status)
-			
 			# send the data over the queue
+			if plc4_bomba1:
+				plc4_bomba1=1
+			else:
+				plc4_bomba1=0
+			if plc4_bomba2:
+				plc4_bomba2=1
+			else:
+				plc4_bomba2=0
+			
 			PLC_4_queue_o.put((plc4_temp_torre,plc4_bomba1,plc4_bomba2))
 			time.sleep(4)
 
 
 		except Exception as e:
-			print(f"Could not update in PLC: error {e}")
+			print(f"Could not update in PLC4: error {e}")
 			plc4,tower_temp,bomba_1_status,bomba_2_status = aux_PLC_comms_4(plc4_ip,plc4_netid)
 			continue
 
@@ -532,7 +529,7 @@ def process_coordinator():
 	i_humidity = 0
 	
 	while True:
-
+		
 		
 		time.sleep(3)
 		try:
@@ -545,6 +542,7 @@ def process_coordinator():
 				shutdown_queue.task_done()
 				break
 		if PLC_1_queue_o.qsize()>0:
+			i_gwk_temp = 0
 			i_gwk_temp,i_part_number,status1,i_speed_1,i_kg_1 = PLC_1_queue_o.get(block=hilo_block)
 			PLC_1_queue_o.task_done()
 			print("recibido de L1")
@@ -579,55 +577,12 @@ def process_coordinator():
 
 		if opt.pred:
 	#convertir bool to uint
-			if status1:
-				status1 = 1
-			else:
-				status1 = 0
-				i_speed_1 = 0
-				i_part_number = 0
-			if status2:
-				status2 = 1
-			else:
-				status2 = 0
-				i_speed_2 = 0
-				i_part_number2 = 0
-			if status3:
-				status3 = 1
-			else:
-				status3 = 0
-				i_speed_3 = 0
-				i_part_number3 = 0
-			if i_bomba1:
-				i_bomba1 = 1
-			else:
-				i_bomba1 = 0
-			if i_bomba2:
-				i_bomba2 = 1
-			else:
-				i_bomba2 = 0
-			if i_gwk_temp > 50:
-				i_gwk_temp = i_gwk_temp/10
-			if i_temp >200:
-				i_temp = i_temp - 273
-			if i_temp_torre > 50:
-				i_temp_torre = i_temp_torre/10
 			now = datetime.now()
 			hora = int(now.strftime("%H"))
 			x_hour = hora
-			if i_part_number > 1000:
-				x_ITW1_PN = i_part_number/100
-			else:
-				x_ITW1_PN = i_part_number
-			
-			if i_part_number2 > 1000:
-				x_ITW2_PN = i_part_number2/100
-			else:
-				x_ITW2_PN = i_part_number2
-			
-			if i_part_number3 > 1000:
-				x_ITW3_PN = i_part_number3/100
-			else:
-				x_ITW3_PN = i_part_number3
+			x_ITW1_PN = i_part_number
+			x_ITW2_PN = i_part_number2
+			x_ITW3_PN = i_part_number3
 			x_ITW1_Auto = status1
 			x_ITW2_Auto = status2
 			x_ITW3_Auto = status3
@@ -645,11 +600,12 @@ def process_coordinator():
 			scaled = scaler.transform([[x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG]])
 			predict_data = saved_model.predict(scaled,verbose=0)
 			predict_data = predict_data.item()
-			if opt.debug:
-				print(f"Data extraña {x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG}")
-				print(f"Predict: {predict_data:,.1f} / Real: {i_gwk_temp:,.1f}. Deviation is {(((predict_data)-(i_gwk_temp))/((i_gwk_temp + predict_data)/2)):.2%}")
+			print(f"Predict: {predict_data:,.1f} / Real: {i_gwk_temp:,.1f}. Deviation is {(predict_data-i_gwk_temp):.2f}")
 			write_log_pred(predict_data,i_gwk_temp)
-
+			if opt.debug:
+				print(f"Input para NN {x_hour,x_ITW1_PN,x_ITW2_PN,x_ITW3_PN,x_ITW1_Auto,x_ITW2_Auto,x_ITW3_Auto,x_Temp_Torre,x_Bomba_1,x_Bomba_2,x_Clima_Temp,x_Clima_Humedad,x_ITW1_Spd,x_ITW2_Spd,x_ITW3_Spd,x_ITW1_KG,x_ITW2_KG,x_ITW3_KG}")
+			
+			
 
 
 if __name__ == '__main__':
@@ -669,9 +625,9 @@ if __name__ == '__main__':
 		scaler = StandardScaler()
 		X_train_scaled = scaler.fit_transform(X_train)
 		saved_model = tf.keras.models.load_model(resource_path('TF_model_prototipe'))
-		hilo_block=True
-	else:
-		hilo_block = False
+		#hilo_block=True
+	#else
+	hilo_block = False
 
 
 	pd_dict = {'timestamp' : ['dumy'], 'temp_adentro' : ['dumy'], 'ITW1_PN' : ['dumy'], 'ITW2_PN' : ['dumy'], 'ITW3_PN' : ['dumy'], 'ITW1_Auto' : ['dumy'], 'ITW2_Auto' : ['dumy'], 'ITW3_Auto' : ['dumy'],'Temp_Torre' : ['dumy'], 'Bomba_1' : ['dumy'], 'Bomba_2' : ['dumy'], 'Clima_Temp' : ['dumy'], 'Clima_Humedad' : ['dumy'], 'ITW1_Spd' : ['dumy'], 'ITW2_Spd' : ['dumy'], 'ITW3_Spd' : ['dumy'], 'ITW1_KG' : ['dumy'], 'ITW2_KG' : ['dumy'], 'ITW3_KG' : ['dumy']}

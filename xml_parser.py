@@ -4,7 +4,7 @@ import pandas as pd
 import sys
 
 #open the file
-pn = '620493'
+pn = '90247161'
 fileptr = open(f"temp_store_xml/{pn}.xml","r")
 
 #read xml content from the file
@@ -13,7 +13,7 @@ xml_content= fileptr.read()
 #print(xml_content)
 
 my_ordered_dict=xmltodict.parse(xml_content)
-print("Ordered Dictionary is:")
+print("Start Process:")
 #print(my_ordered_dict)
 
 #store all dictionaries
@@ -153,7 +153,7 @@ for i in range(0,len(my_ordered_dict['EXPORT']['FKKoordWert'])):
 		df25.to_csv(f'xml_processed/FKKoordWert_{pn}_c.csv', mode='a',index=False, header=False)
 
 
-
+print("Finished Processing")
 
 
 

@@ -11,6 +11,8 @@ from sklearn.linear_model import LinearRegression
 
 import numpy as np
 
+print("Num GPUs Available: ", len(tf.config.list_physical_devices('GPU')))
+
 
 #tf.random.set_seed(42)
 
@@ -19,7 +21,7 @@ def resource_path(relative_path):
     base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, relative_path)
 
-version = 9
+version = 10
 
 
 #put the dataset into a pandas dataframe
@@ -30,7 +32,7 @@ water['ITW1_PN'] = water['ITW1_PN']/100
 water['ITW2_PN'] = water['ITW2_PN']/100
 water['ITW3_PN'] = water['ITW3_PN']/100
 
-print(water.head())
+print(water.describe())
 
 ## separate the dataset in two subsets: 80% of entire dataset will be the training data, and the remaining dataset will be the test data
 train_set, test_set = train_test_split(water, test_size=0.2, random_state=42)
@@ -99,6 +101,7 @@ X_train, X_valid, y_train, y_valid = train_test_split(X_train_full, y_train_full
 X_train.to_csv(resource_path(f"X_train_load{version}.csv"),index=False)
 scaler = StandardScaler()
 X_train_scaled = scaler.fit_transform(X_train)
+print(X_train_scaled[:10])
 X_valid_scaled = scaler.transform(X_valid)
 X_test_scaled = scaler.transform(X_test)
 
@@ -123,12 +126,11 @@ print(f"{y_pred}")
 
 model_1 = tf.keras.Sequential([
 	tf.keras.layers.Normalization(input_shape=X_train.shape[1:]),
-    tf.keras.layers.Dense(128, activation ='sigmoid'),
     tf.keras.layers.Dense(64, activation ='tanh'),
-    #tf.keras.layers.Dense(64, activation ='tanh'),
-    #tf.keras.layers.Dense(64, activation ='sigmoid'),
-    #tf.keras.layers.Dense(64, activation ='tanh'),
-    #tf.keras.layers.Dense(64, activation ='sigmoid'),
+    tf.keras.layers.Dense(64, activation ='sigmoid'),
+    
+    tf.keras.layers.Dense(64, activation ='tanh'),
+    tf.keras.layers.Dense(64, activation ='sigmoid'),
 	tf.keras.layers.Dense(1)
 ])
 
@@ -144,7 +146,7 @@ early_cb = tf.keras.callbacks.EarlyStopping(monitor='val_root_mean_squared_error
 #lr_scheduler = tf.keras.callbacks.LearningRateScheduler(lambda epoch: 1e-4*10**(epoch/20))
 # 3.Fit the model
 #history = model_1.fit(PP_train_feat_tr,PP_train_label,callbacks=[early_cb,cp_callback],steps_per_epoch=len(PP_train_label), validation_data=(PP_test_feat_tr,PP_test_label),validation_steps=len(PP_test_label), epochs=200)
-history = model_1.fit(X_train_scaled, y_train,callbacks=[early_cb,cp_callback],steps_per_epoch=len(y_train), validation_data=(X_valid_scaled, y_valid),validation_steps=len(y_valid), epochs=100)
+history = model_1.fit(X_train_scaled, y_train,callbacks=[early_cb,cp_callback],steps_per_epoch=len(y_train), validation_data=(X_valid_scaled, y_valid),validation_steps=len(y_valid), epochs=30)
 
 
 
